@@ -1,0 +1,1 @@
+<?php require_once __DIR__ . '/LogOut/logOut_logic.php'; ?>

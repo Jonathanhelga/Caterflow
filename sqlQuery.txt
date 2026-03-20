@@ -1,0 +1,159 @@
+making table
+User_List
+    CREATE TABLE User_List (
+        user_id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+Customer_Information
+    CREATE TABLE customers (
+        cust_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        cust_code VARCHAR(10) NOT NULL UNIQUE,
+        type ENUM('individual', 'hotel', 'company', 'reseller') NOT NULL,
+
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(20) NOT NULL UNIQUE,
+        
+        city VARCHAR(100),
+        address_line TEXT,
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+
+        INDEX idx_cust_code (cust_code),
+        INDEX idx_name (name),
+        
+        FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+Product_Information
+    CREATE TABLE products (
+        product_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+
+        product_code VARCHAR(10) NOT NULL UNIQUE,
+        category_id INT UNSIGNED,
+
+        source ENUM('Vendor', 'In-house') NOT NULL,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        price DECIMAL(10,2) NOT NULL,
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        INDEX idx_name (name),
+        INDEX idx_source (source),
+        
+        FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE
+        FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+(
+    ALTER TABLE products 
+        ADD COLUMN category_id INT UNSIGNED AFTER product_code,
+        ADD CONSTRAINT fk_category 
+        FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL;
+)
+
+CREATE TABLE categories (
+    category_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+Vendor_Information
+    CREATE TABLE vendors (
+        vendor_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        vendor_code VARCHAR(10) NOT NULL UNIQUE,
+
+        name VARCHAR(100) NOT NULL,
+        product_id INT NOT NULL,
+        contact_person VARCHAR(100),
+        phone VARCHAR(20) NOT NULL UNIQUE,
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        INDEX idx_contact_person (contact_person),
+        INDEX idx_name (name),
+        INDEX idx_product_id (product_id),
+        
+        FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+Orders_Information
+    CREATE TABLE orders (
+        order_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        cust_id BIGINT UNSIGNED NOT NULL,
+        
+        invoice_number VARCHAR(20) NOT NULL UNIQUE,
+        order_date DATETIME NOT NULL,
+        delivery_date DATETIME NOT NULL,
+        status ENUM('pending', 'processing', 'completed', 'cancelled') DEFAULT 'processing',
+        payment_status ENUM('pending', 'partial', 'paid', 'overdue') DEFAULT 'pending', 
+        total_amount DECIMAL(12,0) DEFAULT 0.00,
+        total_paid DECIMAL(12,0) DEFAULT 0.00,
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        INDEX idx_invoice (invoice_number),
+        INDEX idx_status (status),
+        INDEX idx_delivery_dates (delivery_date),
+        
+        FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE, 
+        FOREIGN KEY (cust_id) REFERENCES customers(cust_id) ON DELETE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+Ordered_Product_Information
+    CREATE TABLE order_items (
+        order_item_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        order_id BIGINT UNSIGNED NOT NULL,
+        product_id BIGINT UNSIGNED NOT NULL,
+        
+        quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+        unit_price DECIMAL(12,0) NOT NULL,
+        subtotal DECIMAL(12,0) GENERATED ALWAYS AS (quantity * unit_price) STORED,
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        
+        UNIQUE INDEX idx_order_product (order_id, product_id),
+        
+        FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+Order_Tenure_Information
+    CREATE TABLE order_tenures (
+        tenure_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        order_id BIGINT UNSIGNED NOT NULL,
+        
+        tenure_number INT NOT NULL CHECK (tenure_number > 0), -- e.g., Installment 1 of 3
+        amount_due DECIMAL(12,0) NOT NULL,
+        amount_paid DECIMAL(12,0) DEFAULT 0.00,
+        
+        due_date DATE NOT NULL,
+        paid_date DATE,
+        
+        status ENUM('pending', 'paid', 'overdue') DEFAULT 'pending',
+        
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        UNIQUE INDEX idx_order_tenure (order_id, tenure_number),
+        INDEX idx_due_date (due_date),
+        INDEX idx_status (status),
+        
+        FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
