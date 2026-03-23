@@ -306,11 +306,11 @@ async function customerDetailPullRequest(cust_code){
         document.getElementById('detail-title').textContent = info.name;
         document.getElementById('detail-subtitle').textContent = `${info.type} · ${info.cust_code}`;
 
-        let tenureRows = tenures.length === 0
-            ? `<tr><td colspan="4" style="text-align:center;">No pending payments</td></tr>`
+        const tenureRows = tenures.length === 0
+            ? `<tr class="no-data"><td colspan="4">No pending payments</td></tr>`
             : tenures.map(t => `
                 <tr>
-                    <td>${t.invoice_number} #${t.tenure_number}</td>
+                    <td>${t.invoice_number} <span style="color:#9ca3af">#${t.tenure_number}</span></td>
                     <td>${t.due_date}</td>
                     <td>${Number(t.amount_due).toLocaleString()}</td>
                     <td>${Number(t.amount_paid).toLocaleString()}</td>
@@ -324,15 +324,25 @@ async function customerDetailPullRequest(cust_code){
                 <p><strong>Address:</strong> ${info.address_line ?? '-'}</p>
             </div>
             <div class="detail-section">
-                <p><strong>Total Orders:</strong> ${info.total_orders}</p>
-                <p><strong>Total Spent:</strong> ${Number(info.total_spent).toLocaleString()}</p>
+                <div class="detail-stats">
+                    <div class="stat-card">
+                        <span class="stat-value">${info.total_orders}</span>
+                        <span class="stat-label">Total Orders</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">${Number(info.total_spent).toLocaleString()}</span>
+                        <span class="stat-label">Total Spent</span>
+                    </div>
+                </div>
             </div>
             <div class="detail-section">
-                <p><strong>Unpaid Installments:</strong></p>
-                <table class="detail-table">
-                    <thead><tr><th>Invoice</th><th>Due Date</th><th>Amount Due</th><th>Paid</th></tr></thead>
-                    <tbody>${tenureRows}</tbody>
-                </table>
+                <p><strong>Unpaid Installments</strong></p>
+                <div class="tenure-table-wrapper">
+                    <table class="detail-table tenure-table">
+                        <thead><tr><th>Invoice</th><th>Due Date</th><th>Amount Due</th><th>Paid</th></tr></thead>
+                        <tbody>${tenureRows}</tbody>
+                    </table>
+                </div>
             </div>`;
 
         panel.classList.add('active');
@@ -352,6 +362,9 @@ async function customerDetailPullRequest(cust_code){
     const closeDetailPanel = document.getElementById('close-detail-btn');
     closeDetailPanel.addEventListener('click', () => {
         document.getElementById('detail-side-panel').classList.remove('active');
+        document.getElementById('detail-title').textContent = '';
+        document.getElementById('detail-subtitle').textContent = '';
+        document.getElementById('detail-form-container').innerHTML = '';
     });
 }());
 

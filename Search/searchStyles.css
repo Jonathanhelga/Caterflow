@@ -343,3 +343,111 @@ button[type="submit"]:active {
     transform: translateY(-1.5px); /* Micro-interaction lift */
     opacity: 0.9;
 }
+
+/* ── Detail Panel ─────────────────────────────────── */
+.detail-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.detail-section p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.5;
+}
+
+.detail-section p strong {
+    color: #0f172a;
+    font-weight: 600;
+    min-width: 90px;
+    display: inline-block;
+}
+
+.detail-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+.tenure-table-wrapper {
+    max-height: 150px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 2px solid #e6e9ef;
+    border-radius: 10px;
+}
+
+.tenure-table {
+    width: 100%;
+}
+.stat-card {
+    flex: 1;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    display: block;
+}
+
+.stat-card .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    display: block;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.detail-table thead th {
+    background-color: var(--accent);
+    color: #fff;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.detail-table thead th:first-child { border-top-left-radius: 8px; }
+.detail-table thead th:last-child  { border-top-right-radius: 8px; }
+
+.detail-table tbody td {
+    padding: 10px;
+    background: #fff;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.detail-table tbody tr:last-child td { border-bottom: none; }
+.detail-table tbody tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+.detail-table tbody tr:last-child td:last-child  { border-bottom-right-radius: 8px; }
+.detail-table tbody tr:hover td { background-color: #f8fafc; }
+
+.detail-table .no-data td {
+    text-align: center;
+    color: var(--muted);
+    font-style: italic;
+    padding: 16px;
+}
