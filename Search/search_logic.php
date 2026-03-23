@@ -51,3 +51,42 @@ if(isset($_GET['category'])){
         die("Connection failed: " . $e->getMessage());
     }
 }
+
+if(isset($_GET['cust_code'])){
+    $cust_code = $_GET['cust_code'];
+    $user_id = $_SESSION['id'];
+
+    try {
+        $stmtInfo = $pdo->prepare(
+            "SELECT c.cust_id, c.name, c.type, c.cust_code, c.phone, c.email, c.city, c.address_line,
+                    COUNT(o.order_id) AS total_orders,
+                    COALESCE(SUM(o.total_amount), 0) AS total_spent
+             FROM customers c
+             LEFT JOIN orders o ON c.cust_id = o.cust_id
+             WHERE c.cust_code = :cust_code AND c.user_id = :user_id
+             GROUP BY c.cust_id"
+        );
+        $stmtInfo->execute([':cust_code' => $cust_code, ':user_id' => $user_id]);
+        $customerInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        $stmtTenures = $pdo->prepare(
+            "SELECT o.invoice_number, ot.tenure_number, ot.amount_due, ot.amount_paid, ot.due_date, ot.status
+             FROM order_tenures ot
+             JOIN orders o ON ot.order_id = o.order_id
+             WHERE o.cust_id = :cust_id AND o.user_id = :user_id AND ot.status = 'pending'
+             ORDER BY ot.due_date ASC"
+        );
+        $stmtTenures->execute([':cust_id' => $customerInfo['cust_id'], ':user_id' => $user_id]);
+        $unpaidTenures = $stmtTenures->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode([
+            'success' => true,
+            'info' => $customerInfo,
+            'unpaid_tenures' => $unpaidTenures
+        ]);
+        exit;
+    } catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}

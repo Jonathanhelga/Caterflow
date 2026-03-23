@@ -38,8 +38,7 @@ function customerTableForming(customerArray, headers){
         modifyBtn.className = 'action-btn';
 
         detailsBtn.addEventListener('click', () => {
-             console.log("Details clicked for customer: " + customer.cust_code);
-             document.getElementById('detail-side-panel').classList.add('active');
+            customerDetailPullRequest(customer.cust_code);
         });
 
         actionCell.appendChild(detailsBtn);
@@ -183,8 +182,6 @@ function installmentTableForming(installmentArray, headers){
     const tblHead = document.createElement('thead');
     const tblBody = document.createElement('tbody');
 
-    // Fix column alignment: colgroup pins each column width so header and body stay in sync
-    // Especially important when rowspan is used (browser auto layout gets confused)
     const colWidths = ['25%', '15%', '15%', '12%', '10%', '23%'];
     const colgroup = document.createElement('colgroup');
     colWidths.forEach(w => {
@@ -260,6 +257,7 @@ function installmentTableForming(installmentArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }  
+
 async function DataPullRequest(template_cat){
     const url = `Search/search_logic.php?category=${template_cat}`;
     try{
@@ -290,6 +288,56 @@ async function DataPullRequest(template_cat){
     }
     catch(error){
         console.error('Error fetching data:', error);
+    }
+}
+
+async function customerDetailPullRequest(cust_code){
+    const url = `Search/search_logic.php?cust_code=${encodeURIComponent(cust_code)}`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { throw new Error('Network response was not ok'); }
+        const data = await response.json();
+        if(!data.success) { console.error('Detail fetch failed:', data.error); return; }
+
+        const info = data.info;
+        const tenures = data.unpaid_tenures;
+
+        const panel = document.getElementById('detail-side-panel');
+        document.getElementById('detail-title').textContent = info.name;
+        document.getElementById('detail-subtitle').textContent = `${info.type} · ${info.cust_code}`;
+
+        let tenureRows = tenures.length === 0
+            ? `<tr><td colspan="4" style="text-align:center;">No pending payments</td></tr>`
+            : tenures.map(t => `
+                <tr>
+                    <td>${t.invoice_number} #${t.tenure_number}</td>
+                    <td>${t.due_date}</td>
+                    <td>${Number(t.amount_due).toLocaleString()}</td>
+                    <td>${Number(t.amount_paid).toLocaleString()}</td>
+                </tr>`).join('');
+
+        document.getElementById('detail-form-container').innerHTML = `
+            <div class="detail-section">
+                <p><strong>Phone:</strong> ${info.phone}</p>
+                <p><strong>Email:</strong> ${info.email ?? '-'}</p>
+                <p><strong>City:</strong> ${info.city ?? '-'}</p>
+                <p><strong>Address:</strong> ${info.address_line ?? '-'}</p>
+            </div>
+            <div class="detail-section">
+                <p><strong>Total Orders:</strong> ${info.total_orders}</p>
+                <p><strong>Total Spent:</strong> ${Number(info.total_spent).toLocaleString()}</p>
+            </div>
+            <div class="detail-section">
+                <p><strong>Unpaid Installments:</strong></p>
+                <table class="detail-table">
+                    <thead><tr><th>Invoice</th><th>Due Date</th><th>Amount Due</th><th>Paid</th></tr></thead>
+                    <tbody>${tenureRows}</tbody>
+                </table>
+            </div>`;
+
+        panel.classList.add('active');
+    } catch (error) {
+        console.error('Error fetching customer details:', error);
     }
 }
 
