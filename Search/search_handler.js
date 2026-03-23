@@ -38,7 +38,7 @@ function customerTableForming(customerArray, headers){
         modifyBtn.className = 'action-btn';
 
         detailsBtn.addEventListener('click', () => {
-            customerDetailPullRequest(customer.cust_code);
+            customerDetailRequest(customer.cust_code);
         });
 
         actionCell.appendChild(detailsBtn);
@@ -80,8 +80,9 @@ function supplierTableForming(supplierArray, headers){
         modifyBtn.textContent = 'Modify';
         modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
-            console.log("Details clicked for supplier: " + supplier.vendor_code);
-            document.getElementById('detail-side-panel').classList.add('active');
+            console.log(supplier.vendor_name);
+            supplierDetailRequest(supplier.vendor_name);
+            // supplierDetailRequest(supplier);
         });
         actionCell.appendChild(detailsBtn);
         actionCell.appendChild(modifyBtn);
@@ -274,7 +275,7 @@ async function DataPullRequest(template_cat){
             supplierTableForming(data.results, headers);
         }
         else if(template_cat === "products"){
-            headers = [ 'Product Code', 'Product Name', 'Price', 'Actions'];
+            headers = [ 'Product Code', 'Product Name', 'Price', 'Cost', 'Actions'];
             productTableForming(data.results, headers);
         }
         else if(template_cat === "orders"){
@@ -291,7 +292,7 @@ async function DataPullRequest(template_cat){
     }
 }
 
-async function customerDetailPullRequest(cust_code){
+async function customerDetailRequest(cust_code){
     const url = `Search/search_logic.php?cust_code=${encodeURIComponent(cust_code)}`;
     try {
         const response = await fetch(url);
@@ -348,6 +349,45 @@ async function customerDetailPullRequest(cust_code){
         panel.classList.add('active');
     } catch (error) {
         console.error('Error fetching customer details:', error);
+    }
+}
+
+async function supplierDetailRequest(vendor_name){
+    const url = `Search/search_logic.php?vendor_name=${encodeURIComponent(vendor_name)}`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { throw new Error('Network response was not ok'); }
+        const data = await response.json();
+        if(!data.success) { console.error('Detail fetch failed:', data.error); return; }
+
+        const info = data.info;
+        const panel = document.getElementById('detail-side-panel');
+
+        document.getElementById('detail-title').textContent = info.name;
+        document.getElementById('detail-subtitle').textContent = `Vendor · ${info.vendor_code}`;
+
+        document.getElementById('detail-form-container').innerHTML = `
+            <div class="detail-section">
+                <p><strong>Contact Person:</strong> ${info.contact_person ?? '-'}</p>
+                <p><strong>Phone:</strong> ${info.phone}</p>
+            </div>
+            <div class="detail-section">
+                <p><strong>Supplied Product</strong></p>
+                <div class="detail-stats">
+                    <div class="stat-card">
+                        <span class="stat-value">${info.product_name}</span>
+                        <span class="stat-label">Product</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">Rp. ${Number(info.cost).toLocaleString()}</span>
+                        <span class="stat-label">Cost of Goods</span>
+                    </div>
+                </div>
+            </div>`;
+
+        panel.classList.add('active');
+    } catch (error) {
+        console.error('Error fetching supplier details:', error);
     }
 }
 

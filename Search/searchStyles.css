@@ -376,7 +376,7 @@ button[type="submit"]:active {
     margin-top: 4px;
 }
 .tenure-table-wrapper {
-    max-height: 150px;
+    height: 20vh;
     overflow-y: auto;
     overflow-x: hidden;
     border: 2px solid #e6e9ef;

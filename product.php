@@ -62,10 +62,19 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="price">Product Price *:</label>
+                        <label for="price">Selling Price *:</label>
                         <div class="price-input-wrapper">
                             <span class="currency-symbol">Rp.</span>
                             <input type="number" id="price" name="product_price" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label for="cost">Cost of Goods :</label>
+                        <div class="price-input-wrapper">
+                            <span class="currency-symbol">Rp.</span>
+                            <input type="number" id="cost" name="product_cost" step="0.01" min="0">
                         </div>
                     </div>
                 </div>

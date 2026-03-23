@@ -1,0 +1,41 @@
+A multi-user business management system for a catering/food business. It handles:                                                                                                                                  
+                                                                                                                                                                                                                     
+  - Customer management (4 types: individual, hotel, company, reseller)                                                                                                                                              
+  - Product & category catalog                                                                                                                                                                                       
+  - Supplier/vendor management                                                                                                                                                                                       
+  - Order creation with payment installment scheduling (daily/weekly/monthly/yearly tenures)
+  - Search & filter across all data with detail panels                                                                                                                                                               
+  - Full multi-user data isolation — each user only sees their own data                                                                                                                                              
+                                                                                                                                                                                                                     
+  ---                                                                                                                                                                                                                
+  Tech Stack                                                                                                                                                                                                         
+                  
+  ┌──────────┬──────────────────────────────────────────────┐
+  │  Layer   │                  Technology                  │
+  ├──────────┼──────────────────────────────────────────────┤
+  │ Backend  │ PHP (procedural)                             │
+  ├──────────┼──────────────────────────────────────────────┤
+  │ Database │ MySQL via PDO (prepared statements)          │                                                                                                                                                        
+  ├──────────┼──────────────────────────────────────────────┤
+  │ Frontend │ HTML5 + CSS3 + Vanilla JavaScript (ES6+)     │                                                                                                                                                        
+  ├──────────┼──────────────────────────────────────────────┤                                                                                                                                                        
+  │ Auth     │ PHP sessions + bcrypt (password_hash/verify) │
+  ├──────────┼──────────────────────────────────────────────┤                                                                                                                                                        
+  │ Config   │ vlucas/phpdotenv for .env credentials        │
+  ├──────────┼──────────────────────────────────────────────┤                                                                                                                                                        
+  │ Server   │ Apache via XAMPP                             │
+  └──────────┴──────────────────────────────────────────────┘                                                                                                                                                        
+   
+  ---                                                                                                                                                                                                                
+  Complexity      
+            
+  Moderate — well beyond a beginner CRUD app, but not enterprise-scale.
+                                                                                                                                                                                                                     
+  What makes it non-trivial:                                                                                                                                                                                         
+  - 8 relational tables with multi-table transactions (order + order_items + order_tenures in one atomic PDO transaction)                                                                                            
+  - Installment calculation logic — splits amounts across configurable periods, handles remainders                                                                                                                   
+  - AJAX-based search — dynamic table rendering across 5 categories with customer detail panels   
+  - Invoice generation — formatted codes like CUSTCODE-YYYYMM[4-digit ID]                                                                                                                                            
+  - Multi-user isolation — all queries scoped by user_id                                                                                                                                                             
+                                                                                                                                                                                                                     
+  ~7 feature modules, ~15K lines of code total. Architecture is MVC-inspired — entry pages in the root, logic in subdirectories, shared DB connection layer.        

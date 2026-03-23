@@ -24,9 +24,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
     $name = trim($_POST['name'] ?? '');
     $type = trim($_POST['type'] ?? '');
     $product_price = trim($_POST['product_price'] ?? '');
+    $product_cost = trim($_POST['product_cost'] ?? '');
     $product_code = trim($_POST['product_code'] ?? '');
     $category = trim($_POST['category'] ?? '');
-    
+
     if (empty($name) || empty($type) || empty($product_price) || empty($product_code)) {
         $message = "Error: Please fill in all required fields (Name, Type, Product Price).";
         $messageType = "error";
@@ -36,8 +37,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
         $check->execute([':name' => $category]);
         $categoryRow = $check->fetch();
 
-        $sql = "INSERT INTO products (user_id, product_code, category_id, name, source, price) 
-                VALUES (:user_id, :product_code, :category_id, :name, :source, :price)";
+        $sql = "INSERT INTO products (user_id, product_code, category_id, name, source, price, cost)
+                VALUES (:user_id, :product_code, :category_id, :name, :source, :price, :cost)";
 
         try {
             $stmt = $pdo->prepare($sql);
@@ -48,7 +49,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
                 ':category_id' => $categoryRow['category_id'],
                 ':name' => $name,
                 ':source' => $type,
-                ':price' => $product_price
+                ':price' => $product_price,
+                ':cost' => !empty($product_cost) ? $product_cost : 0
             ];
 
             if ($stmt->execute($params)) {

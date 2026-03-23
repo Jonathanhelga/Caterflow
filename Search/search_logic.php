@@ -22,7 +22,7 @@ if(isset($_GET['category'])){
                   WHERE v.user_id = :user_id";
     }
     if($category == "products"){
-        $query = "SELECT product_code, name, price FROM products WHERE user_id = :user_id";
+        $query = "SELECT product_code, name, price, cost FROM products WHERE user_id = :user_id";
     }
     if($category == "orders"){
         $query = "SELECT o.invoice_number, c.name, o.delivery_date, o.total_amount, o.payment_status
@@ -83,6 +83,30 @@ if(isset($_GET['cust_code'])){
             'success' => true,
             'info' => $customerInfo,
             'unpaid_tenures' => $unpaidTenures
+        ]);
+        exit;
+    } catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
+
+if(isset($_GET['vendor_name'])){
+    $vendor_name = $_GET['vendor_name'];
+    $user_id = $_SESSION['id'];
+
+    try {
+        $stmtInfo = $pdo->prepare(
+            "SELECT v.vendor_code, v.name, p.name AS product_name, p.cost, v.contact_person, v.phone
+            FROM vendors v 
+            JOIN products p ON v.product_id = p.product_id
+            WHERE v.name = :vendor_name AND v.user_id = :user_id"
+        );
+        $stmtInfo->execute([':vendor_name' => $vendor_name, ':user_id' => $user_id]);
+        $vendorInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+        echo json_encode([
+            'success' => true,
+            'info' => $vendorInfo,
         ]);
         exit;
     } catch(PDOException $e){
