@@ -4,6 +4,10 @@
     --accent-dark: #469062;
     --muted: #6b7280;
     --card-bg: rgba(255, 255, 255, 0.85);
+    --pending: rgb(225, 198, 147);
+    --partial: rgb(147, 185, 225);
+    --paid: rgb(172, 225, 147);
+    --overdue: rgb(218, 111, 111);
 }
 
 html,
@@ -401,6 +405,31 @@ button[type="submit"]:active {
     color: var(--accent-dark);
     display: block;
 }
+
+.stat-card-pending {
+    background: linear-gradient(135deg, rgb(255, 243, 220), rgb(245, 225, 180));
+    border-color: var(--pending);
+}
+.stat-card-pending .stat-value-pending { color: rgb(160, 120, 40); }
+
+.stat-card-partial {
+    background: linear-gradient(135deg, rgb(220, 235, 255), rgb(180, 210, 245));
+    border-color: var(--partial);
+}
+.stat-card-partial .stat-value-partial { color: rgb(50, 110, 180); }
+
+.stat-card-paid {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-color: var(--paid);
+}
+.stat-card-paid .stat-value-paid { color: var(--accent-dark); }
+
+.stat-card-overdue {
+    background: linear-gradient(135deg, rgb(255, 230, 230), rgb(245, 185, 185));
+    border-color: var(--overdue);
+}
+.stat-card-overdue .stat-value-overdue { color: rgb(180, 50, 50); }
+
 
 .stat-card .stat-label {
     font-size: 11px;

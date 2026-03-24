@@ -164,10 +164,14 @@ function orderTableForming(orderArray, headers){
     tblHead.appendChild(headerRow);
     orderArray.forEach(order => {
         const newRow = document.createElement('tr');
-        Object.values(order).forEach(columnValue => {
-            const newCell = document.createElement('td');
-            newCell.textContent = columnValue;
-            newRow.appendChild(newCell);
+        Object.entries(order).forEach(([key, value]) => {
+            if(key === 'order_id'){ 
+                newRow.setAttribute('data-id', value);
+                return;
+            }
+            const td = document.createElement('td');
+            td.textContent = value;
+            newRow.appendChild(td);
         });
         const actionCell = document.createElement('td');
         const detailsBtn = document.createElement('button');
@@ -177,8 +181,8 @@ function orderTableForming(orderArray, headers){
         modifyBtn.textContent = 'Modify';
         modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
-            console.log("Details clicked for order: " + order.invoice_number);
-            document.getElementById('detail-side-panel').classList.add('active');
+            const idValue = newRow.getAttribute('data-id');
+            orderDetailRequest(idValue);
         });
         actionCell.appendChild(detailsBtn);
         actionCell.appendChild(modifyBtn);
@@ -472,8 +476,61 @@ async function productDetailRequest(product_id){
     }
 }
 
-async function orderDetailRequest(){
+async function orderDetailRequest(order_id){
+    const url = `Search/search_logic.php?order_id=${encodeURIComponent(order_id)}`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { throw new Error('Network response was not ok'); }
+        const data = await response.json();
+        if(!data.success) { console.error('Detail fetch failed:', data.error); return; }
 
+        const info = data.info;
+        const products = data.products;
+        const panel = document.getElementById('detail-side-panel');
+
+        document.getElementById('detail-title').textContent = info.invoice_number;
+        document.getElementById('detail-subtitle').textContent = `${info.customer_name}`;
+
+        const productRows = products.length === 0
+            ? `<tr class="no-data"><td colspan="4">No items</td></tr>`
+            : products.map(p => `
+                <tr>
+                    <td>${p.product_name}</td>
+                    <td style="text-align:center">${p.quantity}</td>
+                    <td>Rp. ${Number(p.unit_price).toLocaleString()}</td>
+                    <td>Rp. ${Number(p.subtotal).toLocaleString()}</td>
+                </tr>`).join('');
+
+        document.getElementById('detail-form-container').innerHTML = `
+            <div class="detail-section">
+                <p><strong>Order Date:</strong> ${info.order_date.slice(0, 10)}</p>
+                <p><strong>Delivery Date:</strong> ${info.delivery_date.slice(0, 10)}</p>
+                <p><strong>Total Amount:</strong> Rp. ${Number(info.total_amount).toLocaleString()}</p>
+                <p><strong>Order Status:</strong>  ${info.status} </p>
+            </div>
+            <div class="detail-section">
+                <div class="detail-stats">
+                    <div class="stat-card stat-card-${info.payment_status}">
+                        <span class="stat-value-${info.payment_status}"> ${info.payment_status} </span>
+                        <span class="stat-label">Payment Status</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <p><strong>Order Items</strong></p>
+                <div class="tenure-table-wrapper">
+                    <table class="detail-table tenure-table">
+                        <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+                        <tbody>${productRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+
+        panel.classList.add('active');
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+    }
 }
 (function () {
     'use strict';

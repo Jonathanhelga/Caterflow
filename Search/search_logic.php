@@ -25,7 +25,7 @@ if(isset($_GET['category'])){
         $query = "SELECT product_id, product_code, name, price, cost FROM products WHERE user_id = :user_id";
     }
     if($category == "orders"){
-        $query = "SELECT o.invoice_number, c.name, o.delivery_date, o.total_amount, o.payment_status
+        $query = "SELECT o.order_id, o.invoice_number, c.name, o.delivery_date, o.total_amount, o.payment_status
                   FROM orders o JOIN customers c ON o.cust_id = c.cust_id
                   WHERE o.user_id = :user_id
                   ORDER BY o.delivery_date ASC";
@@ -161,6 +161,46 @@ if(isset($_GET['product_id'])){
             'success' => true,
             'info' => $productInfo,
             'product_sold' => $productSold
+        ]);
+        exit;
+    }catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
+
+if(isset($_GET['order_id'])){
+    $order_id = $_GET['order_id'];
+    $user_id = $_SESSION['id'];
+
+    try{
+        $stmtInfo = $pdo->prepare(
+            "SELECT o.invoice_number, o.order_date, o.delivery_date, o.status, o.payment_status, o.total_amount,
+                    c.name AS customer_name
+             FROM orders o
+             JOIN customers c ON o.cust_id = c.cust_id
+             WHERE o.order_id = :order_id AND o.user_id = :user_id"
+        );
+        $stmtInfo->execute([':order_id' => $order_id, ':user_id' => $user_id]);
+        $orderInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        if (!$orderInfo) {
+            echo json_encode(['success' => false, 'error' => 'Order not found']);
+            exit;
+        }
+
+        $stmtProducts = $pdo->prepare(
+                        "SELECT p.name AS product_name, oi.quantity, oi.unit_price, oi.subtotal
+                        FROM order_items oi
+                        JOIN products p ON oi.product_id = p.product_id
+                        WHERE oi.order_id = :order_id AND p.user_id = :user_id"
+        );
+        $stmtProducts->execute([':order_id' => $order_id, ':user_id' => $user_id]);
+        $products = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode([
+            'success' => true,
+            'info' => $orderInfo,
+            'products' => $products
         ]);
         exit;
     }catch(PDOException $e){
