@@ -51,6 +51,7 @@ function customerTableForming(customerArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
+
 function supplierTableForming(supplierArray, headers){
     let resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -93,6 +94,7 @@ function supplierTableForming(supplierArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
+
 function productTableForming(productArray, headers){
     let resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -122,8 +124,8 @@ function productTableForming(productArray, headers){
         modifyBtn.textContent = 'Modify';
         modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
-            console.log("Details clicked for product: " + product.product_code);
-            document.getElementById('detail-side-panel').classList.add('active');
+            productDetailRequest(product.product_code)
+            // console.log("Details clicked for product: " + product.product_code);
         });
         actionCell.appendChild(detailsBtn);
         actionCell.appendChild(modifyBtn);
@@ -134,6 +136,7 @@ function productTableForming(productArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
+
 function orderTableForming(orderArray, headers){
     let resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -175,6 +178,7 @@ function orderTableForming(orderArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
+
 function installmentTableForming(installmentArray, headers){
     const resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -307,6 +311,8 @@ async function customerDetailRequest(cust_code){
         document.getElementById('detail-title').textContent = info.name;
         document.getElementById('detail-subtitle').textContent = `${info.type} · ${info.cust_code}`;
 
+        const totalUnpaid = tenures.reduce((sum, t) => sum + Number(t.amount_due), 0);
+
         const tenureRows = tenures.length === 0
             ? `<tr class="no-data"><td colspan="4">No pending payments</td></tr>`
             : tenures.map(t => `
@@ -331,8 +337,8 @@ async function customerDetailRequest(cust_code){
                         <span class="stat-label">Total Orders</span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-value">${Number(info.total_spent).toLocaleString()}</span>
-                        <span class="stat-label">Total Spent</span>
+                        <span class="stat-value">Rp. ${totalUnpaid.toLocaleString()}</span>
+                        <span class="stat-label">Total Unpaid</span>
                     </div>
                 </div>
             </div>
@@ -388,6 +394,70 @@ async function supplierDetailRequest(vendor_name){
         panel.classList.add('active');
     } catch (error) {
         console.error('Error fetching supplier details:', error);
+    }
+}
+
+async function productDetailRequest(product_code){
+    const url = `Search/search_logic.php?product_code=${encodeURIComponent(product_code)}`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { throw new Error('Network response was not ok'); }
+        const data = await response.json();
+        if(!data.success) { console.error('Detail fetch failed:', data.error); return; }
+
+        const info = data.info;
+        const orders = data.product_sold;
+        const panel = document.getElementById('detail-side-panel');
+
+        document.getElementById('detail-title').textContent = info.product_name;
+        document.getElementById('detail-subtitle').textContent = `${info.product_code} · ${info.source}${info.category_name ? ' · ' + info.category_name : ''}`;
+
+        const margin = info.price > 0
+            ? ((info.price - info.cost) / info.price * 100).toFixed(1)
+            : '—';
+
+        const orderRows = orders.length === 0
+            ? `<tr class="no-data"><td colspan="4">No orders yet</td></tr>`
+            : orders.map(o => `
+                <tr>
+                    <td>${o.invoice_number}<br><span style="color:#9ca3af;font-size:11px">${o.customer_name}</span></td>
+                    <td>${o.order_date.slice(0, 10)}</td>
+                    <td style="text-align:center">${o.quantity}</td>
+                    <td>Rp. ${Number(o.subtotal).toLocaleString()}</td>
+                </tr>`).join('');
+
+        document.getElementById('detail-form-container').innerHTML = `
+            <div class="detail-section">
+                <div class="detail-stats">
+                    <div class="stat-card">
+                        <span class="stat-value">Rp. ${Number(info.price).toLocaleString()}</span>
+                        <span class="stat-label">Selling Price</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">Rp. ${Number(info.cost).toLocaleString()}</span>
+                        <span class="stat-label">Cost of Goods</span>
+                    </div>
+                </div>
+                <div class="detail-stats">
+                    <div class="stat-card">
+                        <span class="stat-value">${margin}%</span>
+                        <span class="stat-label">Margin</span>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-section">
+                <p><strong>Orders Containing This Product</strong></p>
+                <div class="tenure-table-wrapper">
+                    <table class="detail-table tenure-table">
+                        <thead><tr><th>Invoice</th><th>Date</th><th>Qty</th><th>Subtotal</th></tr></thead>
+                        <tbody>${orderRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+
+        panel.classList.add('active');
+    } catch (error) {
+        console.error('Error fetching product details:', error);
     }
 }
 

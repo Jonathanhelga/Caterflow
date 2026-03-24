@@ -373,7 +373,7 @@ button[type="submit"]:active {
 .detail-stats {
     display: flex;
     gap: 12px;
-    margin-top: 4px;
+    margin-top: 10px;
 }
 .tenure-table-wrapper {
     height: 20vh;

@@ -114,3 +114,41 @@ if(isset($_GET['vendor_name'])){
         exit;
     }
 }
+
+if(isset($_GET['product_code'])){
+    $prod_code = $_GET['product_code'];
+    $user_id = $_SESSION['id'];
+    try{
+        $stmtInfo = $pdo->prepare(
+           "SELECT p.product_id, p.product_code, p.name AS product_name,
+                   c.name AS category_name, p.source, p.price, p.cost
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE p.product_code = :product_code AND p.user_id = :user_id"
+        );
+        $stmtInfo->execute([':product_code' => $prod_code, ':user_id' => $user_id]);
+        $productInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        $stmtProductSold = $pdo->prepare(
+            "SELECT o.invoice_number, c.name AS customer_name, o.order_date,
+                    oi.quantity, oi.unit_price, oi.subtotal
+             FROM order_items oi
+             JOIN orders o ON oi.order_id = o.order_id
+             JOIN customers c ON o.cust_id = c.cust_id
+             WHERE oi.product_id = :product_id AND o.user_id = :user_id
+             ORDER BY o.order_date DESC"
+        );
+        $stmtProductSold->execute([':product_id' => $productInfo['product_id'], ':user_id' => $user_id]);
+        $productSold = $stmtProductSold->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode([
+            'success' => true,
+            'info' => $productInfo,
+            'product_sold' => $productSold
+        ]);
+        exit;
+    }catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
