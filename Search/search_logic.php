@@ -14,15 +14,15 @@ if(isset($_GET['category'])){
     $results = [];
 
     if($category == "customers"){
-        $query = "SELECT type, cust_code, name, email, phone FROM customers WHERE user_id = :user_id";
+        $query = "SELECT cust_id, type, cust_code, name, email, phone FROM customers WHERE user_id = :user_id";
     }
     if($category == "suppliers"){
-        $query = "SELECT v.name AS vendor_name, p.name AS product_name, v.contact_person, v.phone
+        $query = "SELECT v.vendor_id, v.name AS vendor_name, p.name AS product_name, v.contact_person, v.phone
                   FROM vendors v JOIN products p ON v.product_id = p.product_id
                   WHERE v.user_id = :user_id";
     }
     if($category == "products"){
-        $query = "SELECT product_code, name, price, cost FROM products WHERE user_id = :user_id";
+        $query = "SELECT product_id, product_code, name, price, cost FROM products WHERE user_id = :user_id";
     }
     if($category == "orders"){
         $query = "SELECT o.invoice_number, c.name, o.delivery_date, o.total_amount, o.payment_status
@@ -52,8 +52,8 @@ if(isset($_GET['category'])){
     }
 }
 
-if(isset($_GET['cust_code'])){
-    $cust_code = $_GET['cust_code'];
+if(isset($_GET['cust_id'])){
+    $cust_id = $_GET['cust_id'];
     $user_id = $_SESSION['id'];
 
     try {
@@ -63,11 +63,16 @@ if(isset($_GET['cust_code'])){
                     COALESCE(SUM(o.total_amount), 0) AS total_spent
              FROM customers c
              LEFT JOIN orders o ON c.cust_id = o.cust_id
-             WHERE c.cust_code = :cust_code AND c.user_id = :user_id
+             WHERE c.cust_id = :cust_id AND c.user_id = :user_id
              GROUP BY c.cust_id"
         );
-        $stmtInfo->execute([':cust_code' => $cust_code, ':user_id' => $user_id]);
+        $stmtInfo->execute([':cust_id' => $cust_id, ':user_id' => $user_id]);
         $customerInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        if (!$customerInfo) {
+            echo json_encode(['success' => false, 'error' => 'Customer not found']);
+            exit;
+        }
 
         $stmtTenures = $pdo->prepare(
             "SELECT o.invoice_number, ot.tenure_number, ot.amount_due, ot.amount_paid, ot.due_date, ot.status
@@ -76,7 +81,7 @@ if(isset($_GET['cust_code'])){
              WHERE o.cust_id = :cust_id AND o.user_id = :user_id AND ot.status = 'pending'
              ORDER BY ot.due_date ASC"
         );
-        $stmtTenures->execute([':cust_id' => $customerInfo['cust_id'], ':user_id' => $user_id]);
+        $stmtTenures->execute([':cust_id' => $cust_id, ':user_id' => $user_id]);
         $unpaidTenures = $stmtTenures->fetchAll(PDO::FETCH_ASSOC);
 
         echo json_encode([
@@ -91,8 +96,8 @@ if(isset($_GET['cust_code'])){
     }
 }
 
-if(isset($_GET['vendor_name'])){
-    $vendor_name = $_GET['vendor_name'];
+if(isset($_GET['vendor_id'])){
+    $vendor_id = $_GET['vendor_id'];
     $user_id = $_SESSION['id'];
 
     try {
@@ -100,10 +105,16 @@ if(isset($_GET['vendor_name'])){
             "SELECT v.vendor_code, v.name, p.name AS product_name, p.cost, v.contact_person, v.phone
             FROM vendors v 
             JOIN products p ON v.product_id = p.product_id
-            WHERE v.name = :vendor_name AND v.user_id = :user_id"
+            WHERE v.vendor_id = :vendor_id AND v.user_id = :user_id"
         );
-        $stmtInfo->execute([':vendor_name' => $vendor_name, ':user_id' => $user_id]);
+        $stmtInfo->execute([':vendor_id' => $vendor_id, ':user_id' => $user_id]);
         $vendorInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        if (!$vendorInfo) {
+            echo json_encode(['success' => false, 'error' => 'Vendor not found']);
+            exit;
+        }
+
         echo json_encode([
             'success' => true,
             'info' => $vendorInfo,
@@ -115,8 +126,8 @@ if(isset($_GET['vendor_name'])){
     }
 }
 
-if(isset($_GET['product_code'])){
-    $prod_code = $_GET['product_code'];
+if(isset($_GET['product_id'])){
+    $product_id = $_GET['product_id'];
     $user_id = $_SESSION['id'];
     try{
         $stmtInfo = $pdo->prepare(
@@ -124,10 +135,15 @@ if(isset($_GET['product_code'])){
                    c.name AS category_name, p.source, p.price, p.cost
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.category_id
-            WHERE p.product_code = :product_code AND p.user_id = :user_id"
+            WHERE p.product_id = :product_id AND p.user_id = :user_id"
         );
-        $stmtInfo->execute([':product_code' => $prod_code, ':user_id' => $user_id]);
+        $stmtInfo->execute([':product_id' => $product_id, ':user_id' => $user_id]);
         $productInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        if (!$productInfo) {
+            echo json_encode(['success' => false, 'error' => 'Product not found']);
+            exit;
+        }
 
         $stmtProductSold = $pdo->prepare(
             "SELECT o.invoice_number, c.name AS customer_name, o.order_date,
@@ -138,7 +154,7 @@ if(isset($_GET['product_code'])){
              WHERE oi.product_id = :product_id AND o.user_id = :user_id
              ORDER BY o.order_date DESC"
         );
-        $stmtProductSold->execute([':product_id' => $productInfo['product_id'], ':user_id' => $user_id]);
+        $stmtProductSold->execute([':product_id' => $product_id, ':user_id' => $user_id]);
         $productSold = $stmtProductSold->fetchAll(PDO::FETCH_ASSOC);
 
         echo json_encode([

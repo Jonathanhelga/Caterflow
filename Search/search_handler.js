@@ -20,13 +20,15 @@ function customerTableForming(customerArray, headers){
 
     customerArray.forEach(customer => {
         const newRow = document.createElement("tr");
-
-        Object.values(customer).forEach(columnValue => {
-            const newCell = document.createElement('td');
-            newCell.textContent = columnValue;
-            newRow.appendChild(newCell);
+        Object.entries(customer).forEach(([key, value]) => {
+            if(key === 'cust_id'){ 
+                newRow.setAttribute('data-id', value);
+                return;
+            }
+            const td = document.createElement('td');
+            td.textContent = value;
+            newRow.appendChild(td);
         });
-
         const actionCell = document.createElement('td');
         
         const detailsBtn = document.createElement('button');
@@ -38,7 +40,8 @@ function customerTableForming(customerArray, headers){
         modifyBtn.className = 'action-btn';
 
         detailsBtn.addEventListener('click', () => {
-            customerDetailRequest(customer.cust_code);
+            const idValue = newRow.getAttribute('data-id');
+            customerDetailRequest(idValue);
         });
 
         actionCell.appendChild(detailsBtn);
@@ -68,10 +71,14 @@ function supplierTableForming(supplierArray, headers){
     tblHead.appendChild(headerRow);
     supplierArray.forEach(supplier => {
         const newRow = document.createElement('tr');
-        Object.values(supplier).forEach(columnValue => {
-            const newCell = document.createElement('td');
-            newCell.textContent = columnValue;
-            newRow.appendChild(newCell);
+        Object.entries(supplier).forEach(([key, value]) => {
+            if(key === 'vendor_id'){ 
+                newRow.setAttribute('data-id', value);
+                return;
+            }
+            const td = document.createElement('td');
+            td.textContent = value;
+            newRow.appendChild(td);
         });
         const actionCell = document.createElement('td');
         const detailsBtn = document.createElement('button');
@@ -81,9 +88,8 @@ function supplierTableForming(supplierArray, headers){
         modifyBtn.textContent = 'Modify';
         modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
-            console.log(supplier.vendor_name);
-            supplierDetailRequest(supplier.vendor_name);
-            // supplierDetailRequest(supplier);
+            const idValue = newRow.getAttribute('data-id');
+            supplierDetailRequest(idValue);
         });
         actionCell.appendChild(detailsBtn);
         actionCell.appendChild(modifyBtn);
@@ -111,11 +117,16 @@ function productTableForming(productArray, headers){
     tblHead.appendChild(headerRow);
     productArray.forEach(product => {
         const newRow = document.createElement('tr');
-        Object.values(product).forEach(columnValue => {
-            const newCell = document.createElement('td');
-            newCell.textContent = columnValue;
-            newRow.appendChild(newCell);
+        Object.entries(product).forEach(([key, value]) => {
+            if(key === 'product_id'){ 
+                newRow.setAttribute('data-id', value);
+                return;
+            }
+            const td = document.createElement('td');
+            td.textContent = value;
+            newRow.appendChild(td);
         });
+        
         const actionCell = document.createElement('td');
         const detailsBtn = document.createElement('button');
         detailsBtn.textContent = 'Details';
@@ -124,8 +135,8 @@ function productTableForming(productArray, headers){
         modifyBtn.textContent = 'Modify';
         modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
-            productDetailRequest(product.product_code)
-            // console.log("Details clicked for product: " + product.product_code);
+            const idValue = newRow.getAttribute('data-id');
+            productDetailRequest(idValue);
         });
         actionCell.appendChild(detailsBtn);
         actionCell.appendChild(modifyBtn);
@@ -296,8 +307,8 @@ async function DataPullRequest(template_cat){
     }
 }
 
-async function customerDetailRequest(cust_code){
-    const url = `Search/search_logic.php?cust_code=${encodeURIComponent(cust_code)}`;
+async function customerDetailRequest(cust_id){
+    const url = `Search/search_logic.php?cust_id=${encodeURIComponent(cust_id)}`;
     try {
         const response = await fetch(url);
         if(!response.ok) { throw new Error('Network response was not ok'); }
@@ -358,8 +369,8 @@ async function customerDetailRequest(cust_code){
     }
 }
 
-async function supplierDetailRequest(vendor_name){
-    const url = `Search/search_logic.php?vendor_name=${encodeURIComponent(vendor_name)}`;
+async function supplierDetailRequest(vendor_id){
+    const url = `Search/search_logic.php?vendor_id=${encodeURIComponent(vendor_id)}`;
     try {
         const response = await fetch(url);
         if(!response.ok) { throw new Error('Network response was not ok'); }
@@ -397,8 +408,8 @@ async function supplierDetailRequest(vendor_name){
     }
 }
 
-async function productDetailRequest(product_code){
-    const url = `Search/search_logic.php?product_code=${encodeURIComponent(product_code)}`;
+async function productDetailRequest(product_id){
+    const url = `Search/search_logic.php?product_id=${encodeURIComponent(product_id)}`;
     try {
         const response = await fetch(url);
         if(!response.ok) { throw new Error('Network response was not ok'); }
@@ -461,6 +472,9 @@ async function productDetailRequest(product_code){
     }
 }
 
+async function orderDetailRequest(){
+
+}
 (function () {
     'use strict';
 
