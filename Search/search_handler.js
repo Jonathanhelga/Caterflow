@@ -193,36 +193,36 @@ function orderTableForming(orderArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
-function tenureStatusButtons(tenureId, currentStatus, onSuccess){
-    const container = document.createElement('div');
-    container.className = 'status-chips';
+// function tenureStatusButtons(tenureId, currentStatus, onSuccess){
+//     const container = document.createElement('div');
+//     container.className = 'status-chips';
 
-    const colorMap = { pending: 'pending', paid: 'paid', overdue: 'overdue' };
+//     const colorMap = { pending: 'pending', paid: 'paid', overdue: 'overdue' };
 
-    ['pending', 'paid', 'overdue'].forEach(s => {
-        const btn = document.createElement('button');
-        btn.textContent = s;
-        btn.className = `status-chip status-chip-${colorMap[s]} ${s === currentStatus ? 'active' : ''}`;
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const formData = new FormData();
-            formData.append('action', 'update_tenure_status');
-            formData.append('tenure_id', tenureId);
-            formData.append('status', s);
+//     ['pending', 'paid', 'overdue'].forEach(s => {
+//         const btn = document.createElement('button');
+//         btn.textContent = s;
+//         btn.className = `status-chip status-chip-${colorMap[s]} ${s === currentStatus ? 'active' : ''}`;
+//         btn.addEventListener('click', async (e) => {
+//             e.stopPropagation();
+//             const formData = new FormData();
+//             formData.append('action', 'update_tenure_status');
+//             formData.append('tenure_id', tenureId);
+//             formData.append('status', s);
 
-            const res = await fetch('Search/search_logic.php', { method: 'POST', body: formData });
-            const result = await res.json();
+//             const res = await fetch('Search/search_logic.php', { method: 'POST', body: formData });
+//             const result = await res.json();
 
-            if(result.success){
-                btn.classList.add('flash');
-                setTimeout(() => { onSuccess(); }, 400);
-            }
-        });
-        container.appendChild(btn);
-    });
+//             if(result.success){
+//                 btn.classList.add('flash');
+//                 setTimeout(() => { onSuccess(); }, 400);
+//             }
+//         });
+//         container.appendChild(btn);
+//     });
 
-    return container;
-}
+//     return container;
+// }
 function installmentTableForming(installmentArray, headers){
     const resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -258,7 +258,7 @@ function installmentTableForming(installmentArray, headers){
     }, {});
 
     // Columns covered by rowspan — skip them in the normal cell loop
-    const GROUPED_COLS = new Set(['invoice_number', 'customer_name', 'order_id']);
+    const GROUPED_COLS = new Set(['invoice_number', 'customer_name', 'order_id', 'tenure_id']);
 
     let tracker = null;
     // let activeStatusCell = null;
@@ -283,34 +283,8 @@ function installmentTableForming(installmentArray, headers){
                 badge.textContent = value;
                 badge.className = `tenure-status-badge tenure-status-${value}`;
                 td.appendChild(badge);
-            } else {
-                td.textContent = value;
-            }
-            // if(key === 'status'){
-            //     td.textContent = value;
-            //     td.classList.add('clickable-status');
-            //     td.title = 'Click to change status';
-            //     td.addEventListener('click', () => {
-            //         if(activeStatusCell && activeStatusCell !== td){
-            //             activeStatusCell.innerHTML = '';
-            //             activeStatusCell.textContent = activeStatusCell.dataset.currentStatus;
-            //         }
-            //         if(activeStatusCell === td){
-            //             td.innerHTML = '';
-            //             td.textContent = td.dataset.currentStatus;
-            //             activeStatusCell = null;
-            //             return;
-            //         }
-            //         td.dataset.currentStatus = value;
-            //         td.innerHTML = '';
-            //         td.appendChild(tenureStatusButtons(installment.tenure_id, value, () => {
-            //             DataPullRequest('installments');
-            //         }));
-            //         activeStatusCell = td;
-            //     });
-            // } else {
-            //     td.textContent = value;
-            // }
+            } 
+            else { td.textContent = value; }
             newRow.appendChild(td);
         });
 
@@ -319,7 +293,7 @@ function installmentTableForming(installmentArray, headers){
             const actionCell = document.createElement('td');
             actionCell.rowSpan = span;
             const updateBtn = document.createElement('button');
-            updateBtn.textContent = 'Modify';
+            updateBtn.textContent = 'Update';
             updateBtn.className = 'action-btn';
             updateBtn.addEventListener('click', () => { 
                 installmentDetailRequest(installment.order_id);
@@ -328,7 +302,8 @@ function installmentTableForming(installmentArray, headers){
             newRow.appendChild(actionCell);
         }
 
-        newRow.dataset.invoice = installment.invoice_number; 
+        newRow.dataset.invoice = installment.invoice_number;
+        newRow.dataset.tenureId = installment.tenure_id;
         newRow.addEventListener('mouseover', () => {
             tblBody.querySelectorAll(`tr[data-invoice="${installment.invoice_number}"]`)
                    .forEach(r => r.classList.add('row-group-hover'));
@@ -644,6 +619,83 @@ async function orderDetailRequest(order_id){
 async function installmentDetailRequest(order_id){
     console.log(order_id);
     const url = `Search/search_logic.php?tenure_order_id=${encodeURIComponent(order_id)}`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { throw new Error('Network response was not ok'); }
+        const data = await response.json();
+        if(!data.success) { console.error('Detail fetch failed:', data.error); return; }
+
+        const info = data.info;
+        const tenures = data.tenures;
+        const panel = document.getElementById('detail-side-panel');
+
+        document.getElementById('detail-title').textContent = info.invoice_number;
+        document.getElementById('detail-subtitle').textContent = `${info.customer_name}`;
+
+
+        const tenureRows = tenures.length === 0
+            ? `<div class="no-data">No items</div>`
+            : tenures.map(tenure => {
+                const statusClass = tenure.status.replace(' ', '-');
+                return `
+                <div class="tenure-card status-${statusClass}">
+                    <div class="tenure-info">
+                        <span class="tenure-label">${info.invoice_number}&nbsp;#${tenure.tenure_number}</span>
+                        <span class="tenure-meta">Due: ${tenure.due_date}</span>
+                        <span class="tenure-amount">Due Amount: ${tenure.amount_due} &nbsp;</span>
+                        <span class="tenure-paid"> Paid: <span class="amount-paid">${tenure.amount_paid}</span></span>
+                        <span class="tenure-status-badge tenure-status-${statusClass}">${tenure.status}</span>
+                    </div>
+                    <div class="tenure-input">
+                        <label>Amount Received</label>
+                        <input type="number" class="tenure-amount-input" data-tenure-id="${tenure.tenure_id}" value="${tenure.amount_paid}" min="0" ${tenure.status === 'paid' ? 'disabled' : ''}>
+                    </div>
+                    <button class="save-btn" ${tenure.status === 'paid' ? 'disabled' : ''}>${tenure.status === 'paid' ? 'Saved' : 'Save'}</button>
+                </div>`;
+            }).join('');
+    
+        document.getElementById('detail-form-container').innerHTML = `<div class="tenure-table-wrapper"> ${tenureRows} </div>`;
+        
+        document.querySelectorAll('.save-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const card = btn.closest('.tenure-card');
+                const input = card.querySelector('.tenure-amount-input');
+
+                const formData = new FormData();
+                formData.append('action', 'update_tenure_status');
+                formData.append('tenure_id', input.dataset.tenureId);
+                formData.append('amount_paid', input.value);
+
+                const res = await fetch('Search/search_logic.php', { method: 'POST', body: formData });
+                const result = await res.json();
+
+                if(result.success){
+                    card.querySelector('.amount-paid').textContent = input.value;
+                    const badge = card.querySelector('.tenure-status-badge');
+                    badge.textContent = result.new_status;
+                    badge.className = `tenure-status-badge tenure-status-${result.new_status}`;
+                    if(result.new_status === 'paid'){
+                        input.disabled = true;
+                        btn.disabled = true;
+                        btn.textContent = 'Saved';
+                    }
+                    const tableRow = document.querySelector(`tr[data-tenure-id="${input.dataset.tenureId}"]`);
+                    if(tableRow){
+                        const tableBadge = tableRow.querySelector('.tenure-status-badge');
+                        if(tableBadge){
+                            tableBadge.textContent = result.new_status;
+                            tableBadge.className = `tenure-status-badge tenure-status-${result.new_status}`;
+                        }
+                    }
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+        panel.classList.add('active');
+    } catch (error) {
+        console.error('Error fetching installments details:', error);
+    }
 }
 (function () {
     'use strict';
