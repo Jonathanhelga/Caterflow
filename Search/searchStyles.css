@@ -474,9 +474,61 @@ button[type="submit"]:active {
 .detail-table tbody tr:last-child td:last-child  { border-bottom-right-radius: 8px; }
 .detail-table tbody tr:hover td { background-color: #f8fafc; }
 
+.status-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.status-chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    opacity: 0.35;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    text-transform: capitalize;
+}
+
+.status-chip.active { opacity: 1; }
+.status-chip:hover  { opacity: 0.75; transform: translateY(-1px); }
+
+.status-chip-pending    { background: rgb(245, 225, 180); border-color: var(--pending);  color: rgb(140, 100, 20); }
+.status-chip-processing { background: rgb(180, 210, 245); border-color: var(--partial);  color: rgb(40, 90, 160); }
+.status-chip-completed  { background: #dcfce7;            border-color: var(--paid);     color: var(--accent-dark); }
+.status-chip-cancelled  { background: rgb(245, 185, 185); border-color: var(--overdue);  color: rgb(160, 40, 40); }
+.status-chip-paid       { background: #dcfce7;            border-color: var(--paid);     color: var(--accent-dark); }
+.status-chip-overdue    { background: rgb(245, 185, 185); border-color: var(--overdue);  color: rgb(160, 40, 40); }
+
+.clickable-status {
+    cursor: pointer;
+    color: green;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+}
+
+@keyframes flash { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.status-chip.flash { animation: flash 0.3s ease; }
+
 .detail-table .no-data td {
     text-align: center;
     color: var(--muted);
     font-style: italic;
     padding: 16px;
 }
+.tenure-status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.8em;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+.tenure-status-pending  { background: rgb(254, 243, 199); border-color: var(--pending);  color: rgb(146, 100, 10); }
+.tenure-status-paid     { background: #dcfce7;            border-color: var(--paid);     color: var(--accent-dark); }
+.tenure-status-overdue  { background: rgb(254, 226, 226); border-color: var(--overdue);  color: rgb(160, 40, 40); }
+.tenure-status-partial { background: rgb(226, 247, 254); border-color: var(--partial);  color: rgb(40, 76, 160); }

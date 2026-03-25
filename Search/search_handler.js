@@ -193,7 +193,36 @@ function orderTableForming(orderArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
+function tenureStatusButtons(tenureId, currentStatus, onSuccess){
+    const container = document.createElement('div');
+    container.className = 'status-chips';
 
+    const colorMap = { pending: 'pending', paid: 'paid', overdue: 'overdue' };
+
+    ['pending', 'paid', 'overdue'].forEach(s => {
+        const btn = document.createElement('button');
+        btn.textContent = s;
+        btn.className = `status-chip status-chip-${colorMap[s]} ${s === currentStatus ? 'active' : ''}`;
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const formData = new FormData();
+            formData.append('action', 'update_tenure_status');
+            formData.append('tenure_id', tenureId);
+            formData.append('status', s);
+
+            const res = await fetch('Search/search_logic.php', { method: 'POST', body: formData });
+            const result = await res.json();
+
+            if(result.success){
+                btn.classList.add('flash');
+                setTimeout(() => { onSuccess(); }, 400);
+            }
+        });
+        container.appendChild(btn);
+    });
+
+    return container;
+}
 function installmentTableForming(installmentArray, headers){
     const resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -229,9 +258,11 @@ function installmentTableForming(installmentArray, headers){
     }, {});
 
     // Columns covered by rowspan — skip them in the normal cell loop
-    const GROUPED_COLS = new Set(['invoice_number', 'customer_name', 'payment_status']);
+    const GROUPED_COLS = new Set(['invoice_number', 'customer_name', 'order_id']);
 
     let tracker = null;
+    // let activeStatusCell = null;
+
     installmentArray.forEach(installment => {
         const newRow = document.createElement('tr');
         const isFirstRow = tracker !== installment.invoice_number;
@@ -245,23 +276,59 @@ function installmentTableForming(installmentArray, headers){
             newRow.appendChild(infoCell);
         }
         Object.entries(installment).forEach(([key, value]) => {
-            if(GROUPED_COLS.has(key)) return;
+            if(GROUPED_COLS.has(key)) { return; }
             const td = document.createElement('td');
-            td.textContent = value;
+            if(key === 'status'){
+                const badge = document.createElement('span');
+                badge.textContent = value;
+                badge.className = `tenure-status-badge tenure-status-${value}`;
+                td.appendChild(badge);
+            } else {
+                td.textContent = value;
+            }
+            // if(key === 'status'){
+            //     td.textContent = value;
+            //     td.classList.add('clickable-status');
+            //     td.title = 'Click to change status';
+            //     td.addEventListener('click', () => {
+            //         if(activeStatusCell && activeStatusCell !== td){
+            //             activeStatusCell.innerHTML = '';
+            //             activeStatusCell.textContent = activeStatusCell.dataset.currentStatus;
+            //         }
+            //         if(activeStatusCell === td){
+            //             td.innerHTML = '';
+            //             td.textContent = td.dataset.currentStatus;
+            //             activeStatusCell = null;
+            //             return;
+            //         }
+            //         td.dataset.currentStatus = value;
+            //         td.innerHTML = '';
+            //         td.appendChild(tenureStatusButtons(installment.tenure_id, value, () => {
+            //             DataPullRequest('installments');
+            //         }));
+            //         activeStatusCell = td;
+            //     });
+            // } else {
+            //     td.textContent = value;
+            // }
             newRow.appendChild(td);
         });
 
-        if(isFirstRow){
+        if(isFirstRow){ 
             const span = rowSpanCount[installment.invoice_number];
-            const statusCell = document.createElement('td');
-            statusCell.rowSpan = span;
-            statusCell.innerHTML = `<strong>${installment.payment_status}</strong>`;
-            newRow.appendChild(statusCell);
+            const actionCell = document.createElement('td');
+            actionCell.rowSpan = span;
+            const updateBtn = document.createElement('button');
+            updateBtn.textContent = 'Modify';
+            updateBtn.className = 'action-btn';
+            updateBtn.addEventListener('click', () => { 
+                installmentDetailRequest(installment.order_id);
+            });
+            actionCell.appendChild(updateBtn)
+            newRow.appendChild(actionCell);
         }
 
-        // Tag every row with its invoice so we can group-highlight on hover
-        newRow.dataset.invoice = installment.invoice_number;
-
+        newRow.dataset.invoice = installment.invoice_number; 
         newRow.addEventListener('mouseover', () => {
             tblBody.querySelectorAll(`tr[data-invoice="${installment.invoice_number}"]`)
                    .forEach(r => r.classList.add('row-group-hover'));
@@ -302,7 +369,7 @@ async function DataPullRequest(template_cat){
             orderTableForming(data.results, headers);
         }
         else{
-            headers = [ 'Order Information', 'Due Date', 'Total Amount', 'Total Paid','Status', 'Payment Status'];
+            headers = [ 'Order Information', 'Due Date', 'Total Amount', 'Total Paid','Status', 'Action'];
             installmentTableForming(data.results, headers);
         }
     }
@@ -486,6 +553,7 @@ async function orderDetailRequest(order_id){
 
         const info = data.info;
         const products = data.products;
+        const tenure = data.tenure_summary;
         const panel = document.getElementById('detail-side-panel');
 
         document.getElementById('detail-title').textContent = info.invoice_number;
@@ -506,13 +574,33 @@ async function orderDetailRequest(order_id){
                 <p><strong>Order Date:</strong> ${info.order_date.slice(0, 10)}</p>
                 <p><strong>Delivery Date:</strong> ${info.delivery_date.slice(0, 10)}</p>
                 <p><strong>Total Amount:</strong> Rp. ${Number(info.total_amount).toLocaleString()}</p>
-                <p><strong>Order Status:</strong>  ${info.status} </p>
+                <p><strong>Order Status:</strong></p>
+                <div class="status-chips">
+                    ${['pending','processing','completed','cancelled'].map(s => `
+                        <button class="status-chip status-chip-${s} ${s === info.status ? 'active' : ''}"
+                                data-order-id="${order_id}"
+                                data-status="${s}">${s}</button>`).join('')}
+                </div>
             </div>
             <div class="detail-section">
                 <div class="detail-stats">
                     <div class="stat-card stat-card-${info.payment_status}">
                         <span class="stat-value-${info.payment_status}"> ${info.payment_status} </span>
                         <span class="stat-label">Payment Status</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">${tenure.total_tenures}</span>
+                        <span class="stat-label">Total Tenures</span>
+                    </div>
+                </div>
+                <div class="detail-stats">
+                    <div class="stat-card stat-card-paid">
+                        <span class="stat-value-paid">${tenure.paid_tenures}</span>
+                        <span class="stat-label">Paid</span>
+                    </div>
+                    <div class="stat-card stat-card-overdue">
+                        <span class="stat-value-overdue">${tenure.unpaid_tenures}</span>
+                        <span class="stat-label">Unpaid</span>
                     </div>
                 </div>
             </div>
@@ -527,10 +615,35 @@ async function orderDetailRequest(order_id){
                 </div>
             </div>`;
 
+        document.querySelectorAll('.status-chip').forEach(chip => {
+            chip.addEventListener('click', async () => {
+                const newStatus = chip.dataset.status;
+                const formData = new FormData();
+                formData.append('action', 'update_order_status');
+                formData.append('order_id', chip.dataset.orderId);
+                formData.append('status', newStatus);
+
+                const res = await fetch('Search/search_logic.php', { method: 'POST', body: formData });
+                const result = await res.json();
+
+                if(result.success){
+                    document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    chip.classList.add('flash');
+                    setTimeout(() => chip.classList.remove('flash'), 600);
+                }
+            });
+        });
+
         panel.classList.add('active');
     } catch (error) {
         console.error('Error fetching order details:', error);
     }
+}
+
+async function installmentDetailRequest(order_id){
+    console.log(order_id);
+    const url = `Search/search_logic.php?tenure_order_id=${encodeURIComponent(order_id)}`;
 }
 (function () {
     'use strict';

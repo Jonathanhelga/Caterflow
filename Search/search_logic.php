@@ -6,7 +6,56 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
-require_once __DIR__ . '/../Database/db_connect.php'; 
+require_once __DIR__ . '/../Database/db_connect.php';
+
+if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_tenure_status'){
+    $tenure_id = $_POST['tenure_id'];
+    $status    = $_POST['status'];
+    $user_id   = $_SESSION['id'];
+
+    $allowed = ['pending', 'paid', 'overdue'];
+    if(!in_array($status, $allowed)){
+        echo json_encode(['success' => false, 'error' => 'Invalid status']);
+        exit;
+    }
+
+    try{
+        $stmt = $pdo->prepare(
+            "UPDATE order_tenures ot
+             JOIN orders o ON ot.order_id = o.order_id
+             SET ot.status = :status
+             WHERE ot.tenure_id = :tenure_id AND o.user_id = :user_id"
+        );
+        $stmt->execute([':status' => $status, ':tenure_id' => $tenure_id, ':user_id' => $user_id]);
+        echo json_encode(['success' => true]);
+        exit;
+    }catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
+
+if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_order_status'){
+    $order_id = $_POST['order_id'];
+    $status   = $_POST['status'];
+    $user_id  = $_SESSION['id'];
+
+    $allowed = ['pending', 'processing', 'completed', 'cancelled'];
+    if(!in_array($status, $allowed)){
+        echo json_encode(['success' => false, 'error' => 'Invalid status']);
+        exit;
+    }
+
+    try{
+        $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE order_id = :order_id AND user_id = :user_id");
+        $stmt->execute([':status' => $status, ':order_id' => $order_id, ':user_id' => $user_id]);
+        echo json_encode(['success' => true]);
+        exit;
+    }catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
 
 if(isset($_GET['category'])){
     $category = $_GET['category'];
@@ -31,12 +80,24 @@ if(isset($_GET['category'])){
                   ORDER BY o.delivery_date ASC";
     }
     if($category == "installments"){
-        $query = "SELECT o.invoice_number, c.name AS customer_name, ot.due_date, ot.amount_due, ot.amount_paid, ot.status, o.payment_status
+        $query= "SELECT o.invoice_number, c.name AS customer_name, ot.due_date, ot.amount_due, ot.amount_paid, ot.status, o.order_id
                   FROM order_tenures ot JOIN orders o ON ot.order_id = o.order_id
                   JOIN customers c ON o.cust_id = c.cust_id
-                  WHERE ot.status = 'pending' AND o.user_id = :user_id
-                  ORDER BY MIN(ot.due_date) OVER (PARTITION BY o.invoice_number) ASC, o.invoice_number, ot.due_date ASC";
+                  WHERE (o.payment_status = 'pending' OR o.payment_status = 'partial') AND o.user_id = :user_id
+                  ORDER BY MIN(CASE WHEN ot.status != 'paid' THEN ot.due_date END) OVER (PARTITION BY o.invoice_number) ASC, o.invoice_number, ot.due_date ASC";
     }
+            // $query= "SELECT o.invoice_number, c.name AS customer_name, ot.due_date, ot.amount_due, ot.amount_paid, ot.status, o.order_id
+            //       FROM order_tenures ot
+            //       JOIN orders o ON ot.order_id = o.order_id
+            //       JOIN customers c ON o.cust_id = c.cust_id
+            //       JOIN (
+            //           SELECT order_id, MIN(due_date) AS min_unpaid_date
+            //           FROM order_tenures
+            //           WHERE status != 'paid'
+            //           GROUP BY order_id
+            //       ) unpaid ON o.order_id = unpaid.order_id
+            //       WHERE (o.payment_status = 'pending' OR o.payment_status = 'partial') AND o.user_id = :user_id
+            //       ORDER BY unpaid.min_unpaid_date ASC, o.invoice_number, ot.due_date ASC";
 
     try{
         $stmt = $pdo->prepare($query);
@@ -197,10 +258,75 @@ if(isset($_GET['order_id'])){
         );
         $stmtProducts->execute([':order_id' => $order_id, ':user_id' => $user_id]);
         $products = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$products) {
+            echo json_encode(['success' => false, 'error' => 'products ordered not found']);
+            exit;
+        }
+
+        $stmtTenures = $pdo->prepare(
+            "SELECT
+                COUNT(*) AS total_tenures,
+                SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_tenures,
+                SUM(CASE WHEN status != 'paid' THEN 1 ELSE 0 END) AS unpaid_tenures
+             FROM order_tenures
+             WHERE order_id = :order_id"
+        );
+        $stmtTenures->execute([':order_id' => $order_id]);
+        $tenureSummary = $stmtTenures->fetch(PDO::FETCH_ASSOC);
+        
         echo json_encode([
             'success' => true,
             'info' => $orderInfo,
-            'products' => $products
+            'products' => $products,
+            'tenure_summary' => $tenureSummary
+        ]);
+        exit;
+    }catch(PDOException $e){
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
+}
+
+if(isset($_GET['tenure_order_id'])){
+    $order_id = $_GET['tenure_order_id'];
+    $user_id = $_SESSION['id'];
+
+    try{
+        $stmtInfo = $pdo->prepare("");
+        // $stmtInfo->execute([':order_id' => $order_id, ':user_id' => $user_id]);
+        $orderInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
+        if (!$orderInfo) {
+            echo json_encode(['success' => false, 'error' => 'Order not found']);
+            exit;
+        }
+
+        $stmtProducts = $pdo->prepare("");
+        // $stmtProducts->execute([':order_id' => $order_id, ':user_id' => $user_id]);
+        $products = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$products) {
+            echo json_encode(['success' => false, 'error' => 'products ordered not found']);
+            exit;
+        }
+
+        $stmtTenures = $pdo->prepare(
+            "SELECT
+                COUNT(*) AS total_tenures,
+                SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_tenures,
+                SUM(CASE WHEN status != 'paid' THEN 1 ELSE 0 END) AS unpaid_tenures
+             FROM order_tenures
+             WHERE order_id = :order_id"
+        );
+        $stmtTenures->execute([':order_id' => $order_id]);
+        $tenureSummary = $stmtTenures->fetch(PDO::FETCH_ASSOC);
+        
+        echo json_encode([
+            'success' => true,
+            'info' => $orderInfo,
+            'products' => $products,
+            'tenure_summary' => $tenureSummary
         ]);
         exit;
     }catch(PDOException $e){

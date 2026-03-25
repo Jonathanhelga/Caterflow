@@ -158,3 +158,5 @@ Order_Tenure_Information
         
         FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ ALTER TABLE order_tenures MODIFY COLUMN status ENUM('pending', 'paid', 'overdue', 'partial') DEFAULT 'pending';  
