@@ -1,4 +1,4 @@
-# Kitchen Ndeso — Business Order & Installment Management System
+<img width="1800" height="1025" alt="main-landing-page" src="https://github.com/user-attachments/assets/7f78b551-c172-48ba-a90d-173e29b9d7f3" /># Kitchen Ndeso — Business Order & Installment Management System
 
 > **Note:** I have been building this project since April 2024. At the time, I did not practice version control — something I regret, as it makes it harder to show my development journey. I learned from it, and going forward I now prioritize consistent Git commits on every project.
 
@@ -14,17 +14,27 @@ Caterflow is a full-stack web application I built to help my parents streamline 
 
 ### 1. Authentication
 - New users register with a username and a confirmed password.
+  <img width="1800" height="1051" alt="regis-page" src="https://github.com/user-attachments/assets/d3eee780-fee4-44e2-aa16-d86f9a01f904" />
+
 - Returning users log in and are redirected to the main dashboard.
+  <img width="1794" height="1023" alt="login-page" src="https://github.com/user-attachments/assets/6c35e302-ef38-4ddb-8829-c731d70b2c0d" />
 - Each user's data is fully isolated — there won't be any cross-account data leakage.
+- Landing Page or main dashboard
+<img width="1800" height="1025" alt="main-landing-page" src="https://github.com/user-attachments/assets/c7cfc85e-2252-495b-b811-3dfc18497b0a" />
 
 ### 2. Master Data Management
 Before placing orders, users set up their business data:
 
 - **Customers** — Name, type (Individual, Hotel, Company, Reseller), customer code (for invoicing), contact person, phone number, and address.
+  <img width="1800" height="1024" alt="customer-form-page" src="https://github.com/user-attachments/assets/b988ef41-448b-457f-9f6f-9218d417385f" />
+
 - **Products** — Category, name, product code, type (vendor-sourced or in-house), selling price, and cost of goods.
-- **Vendors / Suppliers** — Supplier details, linked to the products sourced from them.
+  **V<img width="1797" height="1024" alt="product-form-page" src="https://github.com/user-attachments/assets/a343812c-2a30-4305-887d-4ef6702abc56" />
+endors / Suppliers** — Supplier details, linked to the products sourced from them.
+<img width="1800" height="1024" alt="supplier-form-page" src="https://github.com/user-attachments/assets/cdbc4316-9c1d-491a-b1c6-5007aa8c8e1c" />
 
 ### 3. Order Management
+<img width="1800" height="1025" alt="order-form-page" src="https://github.com/user-attachments/assets/231daf68-fc0d-4178-b0b3-1acffc62a37c" />
 The core feature of the app. Users can:
 - Select a customer and a delivery date.
 - Add multiple products to a single order.
@@ -32,6 +42,11 @@ The core feature of the app. Users can:
 
 ### 4. Data Search & Detail Panel
 A dynamic search interface that lets users browse and inspect all stored data in real time:
+<img width="1800" height="1023" alt="customer-details" src="https://github.com/user-attachments/assets/de481b89-b4a8-41b7-af6a-ada3a382db5d" />
+<img width="1800" height="1023" alt="product-details" src="https://github.com/user-attachments/assets/a73e870b-33d6-4855-a742-480d4a496603" />
+<img width="1800" height="1023" alt="supplier-details" src="https://github.com/user-attachments/assets/582e4902-e60c-45a8-9650-78cfb37ec302" />
+<img width="1800" height="1024" alt="order-details" src="https://github.com/user-attachments/assets/7e08901f-d167-4c5b-ad35-5e62d36c1c4a" />
+<img width="1800" height="1023" alt="installment-details" src="https://github.com/user-attachments/assets/bd0bd759-9c6e-4987-97e8-af0c2e279c9a" />
 
 | Table | Summary View | Detail Panel |
 |---|---|---|
