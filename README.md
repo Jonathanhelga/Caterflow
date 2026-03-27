@@ -1,4 +1,4 @@
-<img width="1800" height="1025" alt="main-landing-page" src="https://github.com/user-attachments/assets/7f78b551-c172-48ba-a90d-173e29b9d7f3" /># Kitchen Ndeso — Business Order & Installment Management System
+# Kitchen Ndeso — Business Order & Installment Management System
 
 > **Note:** I have been building this project since April 2024. At the time, I did not practice version control — something I regret, as it makes it harder to show my development journey. I learned from it, and going forward I now prioritize consistent Git commits on every project.
 
