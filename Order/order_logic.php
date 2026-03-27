@@ -28,15 +28,9 @@ try {
     $products = [];
 }
 
-function generateInvoiceNumber($pdo, $cust_code, $order_date) {
+function generateInvoiceNumber($cust_code, $order_date, $order_id) {
     $date_string = (new DateTime($order_date))->format("Ymd");
-    try {
-        $stmt = $pdo->query("SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders'");
-        $next_id = $stmt->fetchColumn() ?: 1;
-        $orderID = str_pad($next_id, 4, "0", STR_PAD_LEFT);
-    } catch (PDOException $e) { $orderID = "0000"; }
-
-    return $cust_code . '-' . $date_string . $orderID;
+    return $cust_code . '-' . $date_string . str_pad($order_id, 4, "0", STR_PAD_LEFT);
 }
 
 function calculateOrderTotals($submitted_products, $submitted_quantities, $all_products){
@@ -91,14 +85,21 @@ function calculateTenures($tenures, $tenure_interval, $period_unit, $total_amoun
     return ['tenure_information' => $tenure_information];
 }
 
-function saveOrder($pdo, $order_data, $items, $tenure_information){
+function saveOrder($pdo, $order_data, $items, $tenure_information, $cust_code){
     try{
         $pdo->beginTransaction();
-        $sqlOrder = "INSERT INTO orders (user_id, cust_id, invoice_number, order_date, delivery_date, total_amount) 
+
+        // Insert with a temporary unique invoice so NOT NULL + UNIQUE constraints are satisfied
+        $order_data[':invoice_number'] = 'TEMP-' . uniqid('', true);
+        $sqlOrder = "INSERT INTO orders (user_id, cust_id, invoice_number, order_date, delivery_date, total_amount)
                      VALUES (:user_id, :cust_id, :invoice_number, :order_date, :delivery_date, :total_amount)";
         $stmtOrder = $pdo->prepare($sqlOrder);
         $stmtOrder->execute($order_data);
         $order_id = $pdo->lastInsertId();
+
+        // Generate final invoice from actual order_id — guaranteed unique
+        $invoice = generateInvoiceNumber($cust_code, $order_data[':order_date'], $order_id);
+        $pdo->prepare("UPDATE orders SET invoice_number = ? WHERE order_id = ?")->execute([$invoice, $order_id]);
 
         $sqlItem = "INSERT INTO order_items (order_id, product_id, quantity, unit_price)
                     VALUES (:order_id, :product_id, :quantity, :unit_price)";
@@ -157,18 +158,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
             }
         }
         $order_calculations = calculateOrderTotals($submitted_products, $submitted_quantities, $products);
-        $invoice = generateInvoiceNumber($pdo, $selected_cust_code, $order_date);
         $paramsOrders = [
             ':user_id' => $_SESSION['id'],
             ':cust_id' => $cust_id,
-            ':invoice_number' => $invoice,
+            ':invoice_number' => '',
             ':order_date' => $order_date,
             ':delivery_date' => $delivery_date,
             ':total_amount' => $order_calculations['total']
         ];
         $tenureArray = calculateTenures($tenures, $tenure_interval, $period_unit, $order_calculations['total'], $delivery_date);
         try{
-            saveOrder($pdo, $paramsOrders, $order_calculations['items'], $tenureArray['tenure_information']);
+            saveOrder($pdo, $paramsOrders, $order_calculations['items'], $tenureArray['tenure_information'], $selected_cust_code);
             $_SESSION['flash_message'] = "Success! Order data has been saved.";
             $_SESSION['flash_type'] = "success";
             header('Location: order.php');

@@ -31,7 +31,7 @@
                 </select>
             </div>
 
-            <div id="filter-inputs-container" class="input-container">
+            <!-- <div id="filter-inputs-container" class="input-container">
                 <div class="inline-group">
                     <div class="form-group">
                         <label for="search-name">Customer Name :</label>
@@ -42,7 +42,7 @@
                         <input type="text" id="search-code" name="search_code" maxlength="10" placeholder="e.g. CUST-01">
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <div id="results-table-container" class="table-container">
             </div>
