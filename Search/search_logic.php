@@ -183,7 +183,7 @@ if(isset($_GET['category'])){
         $query= "SELECT o.invoice_number, c.name AS customer_name, ot.due_date, ot.amount_due, ot.amount_paid, ot.status, o.order_id, ot.tenure_id
                   FROM order_tenures ot JOIN orders o ON ot.order_id = o.order_id
                   JOIN customers c ON o.cust_id = c.cust_id
-                  WHERE (o.payment_status = 'pending' OR o.payment_status = 'partial') AND o.user_id = :user_id
+                  WHERE (o.payment_status = 'pending' OR o.payment_status = 'partial' OR o.payment_status= 'overdue') AND o.user_id = :user_id
                   ORDER BY MIN(CASE WHEN ot.status != 'paid' THEN ot.due_date END) OVER (PARTITION BY o.invoice_number) ASC, o.invoice_number, ot.due_date ASC";
     }
             // $query= "SELECT o.invoice_number, c.name AS customer_name, ot.due_date, ot.amount_due, ot.amount_paid, ot.status, o.order_id

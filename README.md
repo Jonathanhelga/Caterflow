@@ -1,8 +1,8 @@
 # Kitchen Ndeso — Business Order & Installment Management System
 
-> **Note:** I have been building this project since April 2024. At the time, I did not practice version control — something I regret, as it makes it harder to show my development journey. I learned from it, and going forward I now prioritize consistent Git commits on every project.
+> **Note:** I have been building this project since April 2024. At the time, I did not practice version control, something I regret, as it makes it harder to show my development journey. I learned from it, and going forward I now prioritize consistent Git commits on every project.
 
----
+---c
 
 ## Overview
 
