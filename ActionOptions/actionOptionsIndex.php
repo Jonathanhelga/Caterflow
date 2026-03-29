@@ -27,8 +27,9 @@ $username = isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"
             function addSupplier(){ location.replace("supplier.php"); }
             function newOrder(){location.replace("order.php"); }
             function searchData(){location.replace("search.php");}
+            function addCustomerContacts(){ location.replace("customer_contact.php")}
             // function calculateWorkHour(){location.replace("HelperWages/helperWages.php"); }
-            function logOutPage(){ location.replace("./logOut.php"); }//also here EC2 ../logOut.php while XAMPP ./logOut.php
+            function logOutPage(){ location.replace("logOut.php"); }//also here EC2 ../logOut.php while XAMPP ./logOut.php
         </script>
     </head>
     <body>
@@ -43,10 +44,13 @@ $username = isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"
                 </div>
                 <div class="action-grid">
                     <button onclick="addCustomer()" class="btn-action">Add Customer</button>
+                    <button onclick="addCustomerContacts()" class="btn-action">Add Customer Contacts</button>
                     <button onclick="addProduct()" class="btn-action">Add Product</button>
                     <button onclick="addSupplier()" class="btn-action">Add Supplier</button>
-                    <button onclick="newOrder()" class="btn-action">New Order</button>
                     <!-- <button onclick="calculateWorkHour()" class="btn-action">Calculate Wages</button> -->
+                </div>
+                <div class="search-grid">
+                    <button onclick="newOrder()" class="btn-action">New Order</button>
                 </div>
                     
                 <footer class="action-footer">

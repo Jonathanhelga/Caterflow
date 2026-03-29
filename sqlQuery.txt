@@ -10,6 +10,25 @@ User_List
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 Customer_Information
+
+    CREATE TABLE customer_contacts (
+        contact_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        cust_id    BIGINT UNSIGNED NOT NULL,
+        user_id    INT NOT NULL,
+        type       ENUM('Purchasing', 'Payment', 'Receiving') NOT NULL,
+        name       VARCHAR(100) NOT NULL,
+        phone      VARCHAR(20)  NOT NULL,
+        notes      TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+        UNIQUE KEY unique_cust_contact_phone (cust_id, phone),
+        INDEX idx_contact_type (type),
+
+        FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (cust_id) REFERENCES customers(cust_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    
     CREATE TABLE customers (
         cust_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,

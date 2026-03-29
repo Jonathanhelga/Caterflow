@@ -20,14 +20,13 @@ body {
     background: linear-gradient(135deg, #f6f9fb 0%, #eef7f1 100%);
     margin: 0;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     padding: 32px;
-    gap: 2rem; /* space between main table and detail panel */
+    gap: 2rem;
     box-sizing: border-box;
-    /* Allow vertical scrolling — never clip page content */
     overflow-x: hidden;
     overflow-y: auto;
     min-height: 100vh;
@@ -48,7 +47,7 @@ body {
 /* Detail panel: side panel on desktop, bottom-sheet overlay on mobile */
 .detail-container {
     width: 100%;
-    max-width: 380px;
+    max-width: 500px;
     display: none;
     align-items: flex-start;
     justify-content: center;
