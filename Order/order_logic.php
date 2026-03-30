@@ -14,7 +14,8 @@ $messageType = "";
 
 $customers = [];
 try {
-    $cusStmt = $pdo->query("SELECT cust_id, cust_code, name FROM customers ORDER BY name ASC");
+    $cusStmt = $pdo->query("SELECT cust_id, cust_code, name FROM customers WHERE user_id = :user_id ORDER BY name ASC");
+    $cusStmt->execute([':user_id' => $_SESSION['id']]);
     $customers = $cusStmt->fetchAll();
 } catch (PDOException $e) {
     $customers = [];
@@ -22,7 +23,8 @@ try {
 
 $products = [];
 try {
-    $prodStmt = $pdo->query("SELECT product_id, name, price FROM products ORDER BY name ASC");
+    $prodStmt = $pdo->query("SELECT product_id, name, price FROM products WHERE user_id = :user_id ORDER BY name ASC");
+    $prodStmt->execute([':user_id' => $_SESSION['id']]);
     $products = $prodStmt->fetchAll();
 } catch (PDOException $e) {
     $products = [];
