@@ -63,7 +63,7 @@ if (isset($_SESSION['flash_message'])) {
                             <?php echo htmlspecialchars($customer['name']) . ' (' . htmlspecialchars($customer['cust_code']) . ')'; ?>
                         </option>
                         <?php
-endforeach; ?>
+                        endforeach; ?>
                     </select>
                 </div>
                 <div id="contacts-section" style="display:none;">
