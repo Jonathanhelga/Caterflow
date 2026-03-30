@@ -30,9 +30,9 @@ function customerTableForming(customerArray, headers){
         detailsBtn.textContent = 'Details';
         detailsBtn.className = 'action-btn';
         
-        const modifyBtn = document.createElement('button');
-        modifyBtn.textContent = 'Modify';
-        modifyBtn.className = 'action-btn';
+        // const modifyBtn = document.createElement('button');
+        // modifyBtn.textContent = 'Modify';
+        // modifyBtn.className = 'action-btn';
 
         detailsBtn.addEventListener('click', () => {
             const idValue = newRow.getAttribute('data-id');
@@ -40,7 +40,7 @@ function customerTableForming(customerArray, headers){
         });
 
         actionCell.appendChild(detailsBtn);
-        actionCell.appendChild(modifyBtn);
+        // actionCell.appendChild(modifyBtn);
         newRow.appendChild(actionCell);
         tblBody.appendChild(newRow);
     });

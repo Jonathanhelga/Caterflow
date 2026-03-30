@@ -9,12 +9,6 @@ const TYPE_BADGE = {
     'Receiving':  'badge-receiving'
 };
 
-function escHtml(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-
-}
 
 function renderContacts(contacts, customerName) {
     if (!contacts.length) {
@@ -34,11 +28,11 @@ function renderContacts(contacts, customerName) {
             <span class="type-badge ${TYPE_BADGE[type] || ''}">${type}</span>
             <div class="contact-cards">`;
         list.forEach(c => {
-            html += `
-                <div class="contact-item">
-                    <div class="contact-name">${escHtml(c.name)}</div>
-                    <div class="contact-phone">📞 ${escHtml(c.phone)}</div>
-                    ${c.notes ? `<div class="contact-notes">${escHtml(c.notes)}</div>` : ''}
+            html += 
+                `<div class="contact-item">
+                    <div class="contact-name">${(c.name)}</div>
+                    <div class="contact-phone">📞 ${(c.phone)}</div>
+                    ${c.notes ? `<div class="contact-notes">${(c.notes)}</div>` : ''}
                 </div>`;
         });
         html += `</div></div>`;
@@ -46,20 +40,18 @@ function renderContacts(contacts, customerName) {
     listEl.innerHTML = html;
 }
 
-function loadContacts(custId) {
+async function loadContacts(custId) {
     listEl.innerHTML = '<p class="panel-placeholder loading">Loading…</p>';
-    fetch(`customer_contact.php?fetch_contacts=1&cust_id=${custId}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                renderContacts(data.contacts, data.customer_name);
-            } else {
-                listEl.innerHTML = `<p class="panel-placeholder error">Failed to load contacts.</p>`;
-            }
-        })
-        .catch(() => {
-            listEl.innerHTML = `<p class="panel-placeholder error">Network error.</p>`;
-        });
+    const url = `customer_contact.php?fetch_contacts=1&cust_id=${custId}`;
+    try {
+        const response = await fetch(url);
+        if(!response.ok) { throw new Error('Network response was not ok'); }
+        const data = await response.json();
+        if(!data.success) { listEl.innerHTML = `<p class="panel-placeholder error">Failed to load contacts.</p>`; return; }
+        renderContacts(data.contacts, data.customer_name);
+    } catch (error) {
+        listEl.innerHTML = `<p class="panel-placeholder error">Network error.</p>`;
+    }
 }
 
 function onCustomerChange(custId) {

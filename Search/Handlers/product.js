@@ -28,15 +28,15 @@ function productTableForming(productArray, headers){
         const detailsBtn = document.createElement('button');
         detailsBtn.textContent = 'Details';
         detailsBtn.className = 'action-btn';
-        const modifyBtn = document.createElement('button');
-        modifyBtn.textContent = 'Modify';
-        modifyBtn.className = 'action-btn';
+        // const modifyBtn = document.createElement('button');
+        // modifyBtn.textContent = 'Modify';
+        // modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
             const idValue = newRow.getAttribute('data-id');
             productDetailRequest(idValue);
         });
         actionCell.appendChild(detailsBtn);
-        actionCell.appendChild(modifyBtn);
+        // actionCell.appendChild(modifyBtn);
         newRow.appendChild(actionCell);
         tblBody.appendChild(newRow);
     });

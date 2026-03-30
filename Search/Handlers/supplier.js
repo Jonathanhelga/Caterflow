@@ -23,19 +23,20 @@ function supplierTableForming(supplierArray, headers){
             td.textContent = value;
             newRow.appendChild(td);
         });
+
         const actionCell = document.createElement('td');
         const detailsBtn = document.createElement('button');
         detailsBtn.textContent = 'Details';
         detailsBtn.className = 'action-btn';
-        const modifyBtn = document.createElement('button');
-        modifyBtn.textContent = 'Modify';
-        modifyBtn.className = 'action-btn';
+        // const modifyBtn = document.createElement('button');
+        // modifyBtn.textContent = 'Modify';
+        // modifyBtn.className = 'action-btn';
         detailsBtn.addEventListener('click', () => {
             const idValue = newRow.getAttribute('data-id');
             supplierDetailRequest(idValue);
         });
         actionCell.appendChild(detailsBtn);
-        actionCell.appendChild(modifyBtn);
+        // actionCell.appendChild(modifyBtn);
         newRow.appendChild(actionCell);
         tblBody.appendChild(newRow);
     });

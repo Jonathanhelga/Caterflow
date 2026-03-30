@@ -5,10 +5,15 @@
 async function DataPullRequest(template_cat){
     const url = `Search/search_logic.php?category=${template_cat}`;
     try{
+        const resultBox = document.getElementById('results-table-container');
         const response = await fetch(url);
         if(!response.ok) { throw new Error('Network response was not ok'); }
         const data = await response.json();
-        console.log(data);
+        if (!data.results || data.results.length < 1) {                                                                                       
+            resultBox.innerHTML = '<p class="empty-state">Nothing here yet.</p>';
+            return;                                                                                                                           
+        } 
+        console.log(data.results.length);
         if(template_cat === "customers"){
             headers = [ 'Category', 'Code', 'Name', 'Email', 'Phone Number', 'Actions'];
             customerTableForming(data.results, headers);
