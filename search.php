@@ -89,6 +89,11 @@
 
     <!-- Optionally link your JS script here at the end -->
     <script src="Search/search_handler.js"></script>
+    <script src="Search/Handlers/customer.js"></script>
+    <script src="Search/Handlers/product.js"></script>
+    <script src="Search/Handlers/supplier.js"></script>
+    <script src="Search/Handlers/order.js"></script>
+    <script src="Search/Handlers/installment.js"></script>
 </body>
 
 </html>

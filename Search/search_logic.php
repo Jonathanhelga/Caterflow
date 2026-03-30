@@ -176,14 +176,14 @@ if(isset($_GET['category'])){
         $query = "SELECT o.order_id, o.invoice_number, c.name, o.delivery_date, o.total_amount, o.payment_status
                   FROM orders o JOIN customers c ON o.cust_id = c.cust_id
                   WHERE o.user_id = :user_id
-                  ORDER BY 
-                    CASE o.payment_status 
-                        WHEN 'overdue'  THEN 1
-                        WHEN 'partial'  THEN 2
-                        WHEN 'pending'  THEN 3
-                        WHEN 'paid'     THEN 4
-                    END,
-                    o.delivery_date ASC";
+                  ORDER BY
+                    -- CASE o.payment_status 
+                    --     WHEN 'overdue'  THEN 1
+                    --     WHEN 'partial'  THEN 2
+                    --     WHEN 'pending'  THEN 3
+                    --     WHEN 'paid'     THEN 4
+                    -- END,
+                    CASE WHEN o.delivery_date >= CURDATE() THEN 0 ELSE 1 END, o.delivery_date DESC";
     }
     if($category == "installments"){
         markOverdueTenures($pdo, $user_id);
