@@ -165,12 +165,20 @@ function orderTableForming(orderArray, headers){
     orderArray.forEach(order => {
         const newRow = document.createElement('tr');
         Object.entries(order).forEach(([key, value]) => {
+            const td = document.createElement('td');
             if(key === 'order_id'){ 
                 newRow.setAttribute('data-id', value);
                 return;
             }
-            const td = document.createElement('td');
-            td.textContent = value;
+            else if(key === 'payment_status'){
+                const badge = document.createElement('span');
+                badge.textContent = value;
+                badge.className = `tenure-status-badge tenure-status-${value}`;
+                td.appendChild(badge);
+            } 
+            else{td.textContent = value;}
+            // const td = document.createElement('td');
+            // td.textContent = value;
             newRow.appendChild(td);
         });
         const actionCell = document.createElement('td');
@@ -193,36 +201,7 @@ function orderTableForming(orderArray, headers){
     table.appendChild(tblBody);
     resultsDiv.appendChild(table);
 }
-// function tenureStatusButtons(tenureId, currentStatus, onSuccess){
-//     const container = document.createElement('div');
-//     container.className = 'status-chips';
 
-//     const colorMap = { pending: 'pending', paid: 'paid', overdue: 'overdue' };
-
-//     ['pending', 'paid', 'overdue'].forEach(s => {
-//         const btn = document.createElement('button');
-//         btn.textContent = s;
-//         btn.className = `status-chip status-chip-${colorMap[s]} ${s === currentStatus ? 'active' : ''}`;
-//         btn.addEventListener('click', async (e) => {
-//             e.stopPropagation();
-//             const formData = new FormData();
-//             formData.append('action', 'update_tenure_status');
-//             formData.append('tenure_id', tenureId);
-//             formData.append('status', s);
-
-//             const res = await fetch('Search/search_logic.php', { method: 'POST', body: formData });
-//             const result = await res.json();
-
-//             if(result.success){
-//                 btn.classList.add('flash');
-//                 setTimeout(() => { onSuccess(); }, 400);
-//             }
-//         });
-//         container.appendChild(btn);
-//     });
-
-//     return container;
-// }
 function installmentTableForming(installmentArray, headers){
     const resultsDiv = document.getElementById('results-table-container');
     resultsDiv.innerHTML = '';
@@ -534,6 +513,16 @@ async function orderDetailRequest(order_id){
         document.getElementById('detail-title').textContent = info.invoice_number;
         document.getElementById('detail-subtitle').textContent = `${info.customer_name}`;
 
+        const contactPairs = [
+            ['Purchasing Contact', info.purchasing_contact_name, info.purchasing_contact_phone],
+            ['Payment Contact',    info.payment_contact_name,    info.payment_contact_phone],
+            ['Receiving Contact',  info.receiving_contact_name,  info.receiving_contact_phone],
+        ];
+        //filter used for filter out if the name is null
+        const contactsHtml = contactPairs.filter(([label, name, phone]) => name)
+            .map(([label, name, phone]) => `<p><strong>${label}:</strong> ${name} (${phone})</p>`)
+            .join('');
+
         const productRows = products.length === 0
             ? `<tr class="no-data"><td colspan="4">No items</td></tr>`
             : products.map(p => `
@@ -549,6 +538,7 @@ async function orderDetailRequest(order_id){
                 <p><strong>Order Date:</strong> ${info.order_date.slice(0, 10)}</p>
                 <p><strong>Delivery Date:</strong> ${info.delivery_date.slice(0, 10)}</p>
                 <p><strong>Total Amount:</strong> Rp. ${Number(info.total_amount).toLocaleString()}</p>
+                ${contactsHtml ? `<div class="contacts-info">${contactsHtml}</div>` : ''}
                 <p><strong>Order Status:</strong></p>
                 <div class="status-chips">
                     ${['pending','processing','completed','cancelled'].map(s => `

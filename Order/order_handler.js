@@ -55,4 +55,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     addItemBtn.click();
+
+    const customerSelect = document.getElementById('customer-list');
+    const contactsSection = document.getElementById('contacts-section');
+    const contactSelects = {
+        Purchasing: document.getElementById('purchasing-contact'),
+        Payment:    document.getElementById('payment-contact'),
+        Receiving:  document.getElementById('receiving-contact'),
+    };
+
+    customerSelect.addEventListener('change', async () => {
+        const custId = customerSelect.value;
+        if (!custId) {
+            contactsSection.style.display = 'none';
+            return;
+        }
+        try {
+            const res = await fetch(`customer_contact.php?fetch_contacts=1&cust_id=${encodeURIComponent(custId)}`);
+            const data = await res.json();
+
+            if (!data.success || !data.contacts || data.contacts.length === 0) {
+                contactsSection.style.display = 'none';
+                return;
+            }
+
+            const byType = { Purchasing: [], Payment: [], Receiving: [] };
+            data.contacts.forEach(c => { if (byType[c.type]) byType[c.type].push(c); });
+
+            Object.entries(contactSelects).forEach(([type, sel]) => {
+                sel.innerHTML = '<option value="">-- None --</option>';
+                byType[type].forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.contact_id;
+                    opt.textContent = `${c.name} (${c.phone})`;
+                    sel.appendChild(opt);
+                });
+            });
+
+            contactsSection.style.display = '';
+        } catch (e) {
+            contactsSection.style.display = 'none';
+        }
+    });
 })

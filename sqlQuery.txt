@@ -116,7 +116,6 @@ Orders_Information
         order_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         cust_id BIGINT UNSIGNED NOT NULL,
-        
         invoice_number VARCHAR(30) NOT NULL UNIQUE,
         order_date DATETIME NOT NULL,
         delivery_date DATETIME NOT NULL,
@@ -135,6 +134,22 @@ Orders_Information
         FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE, 
         FOREIGN KEY (cust_id) REFERENCES customers(cust_id) ON DELETE RESTRICT
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+  ALTER TABLE orders
+      ADD COLUMN purchasing_contact_id BIGINT UNSIGNED AFTER cust_id,
+      ADD CONSTRAINT fk_purchasing_contact                                                                                              
+          FOREIGN KEY (purchasing_contact_id) REFERENCES customer_contacts(contact_id) ON DELETE SET NULL;
+                                                                                                                                        
+  ALTER TABLE orders
+      ADD COLUMN payment_contact_id BIGINT UNSIGNED AFTER purchasing_contact_id,                                                        
+      ADD CONSTRAINT fk_payment_contact
+          FOREIGN KEY (payment_contact_id) REFERENCES customer_contacts(contact_id) ON DELETE SET NULL;
+                                                                                                                                        
+  ALTER TABLE orders
+      ADD COLUMN receiving_contact_id BIGINT UNSIGNED AFTER payment_contact_id,                                                         
+      ADD CONSTRAINT fk_receiving_contact
+          FOREIGN KEY (receiving_contact_id) REFERENCES customer_contacts(contact_id) ON DELETE SET NULL;   
+
 
 Ordered_Product_Information
     CREATE TABLE order_items (

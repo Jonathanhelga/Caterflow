@@ -545,7 +545,7 @@ button[type="submit"]:active { transform: translateY(0); }
 .badge-paid           { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
 .badge-overdue        { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
 .badge-partial        { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
-.badge-partially-paid { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+/* .badge-partially-paid { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; } */
 
 /* ── Tenure cards ─────────────────────────────────── */
 .tenure-card {

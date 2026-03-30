@@ -66,6 +66,28 @@ if (isset($_SESSION['flash_message'])) {
 endforeach; ?>
                     </select>
                 </div>
+                <div id="contacts-section" style="display:none;">
+                    <div class="inline-group">
+                        <div class="form-group">
+                            <label for="purchasing-contact">Purchasing Contact:</label>
+                            <select id="purchasing-contact" name="purchasing_contact_id">
+                                <option value="">-- None --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment-contact">Payment Contact:</label>
+                            <select id="payment-contact" name="payment_contact_id">
+                                <option value="">-- None --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="receiving-contact">Receiving Contact:</label>
+                            <select id="receiving-contact" name="receiving_contact_id">
+                                <option value="">-- None --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <div class="inline-group">
                     <div class="form-group">
                         <label>Order Date :</label>

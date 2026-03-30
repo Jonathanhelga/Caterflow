@@ -176,7 +176,14 @@ if(isset($_GET['category'])){
         $query = "SELECT o.order_id, o.invoice_number, c.name, o.delivery_date, o.total_amount, o.payment_status
                   FROM orders o JOIN customers c ON o.cust_id = c.cust_id
                   WHERE o.user_id = :user_id
-                  ORDER BY o.delivery_date ASC";
+                  ORDER BY 
+                    CASE o.payment_status 
+                        WHEN 'overdue'  THEN 1
+                        WHEN 'partial'  THEN 2
+                        WHEN 'pending'  THEN 3
+                        WHEN 'paid'     THEN 4
+                    END,
+                    o.delivery_date ASC";
     }
     if($category == "installments"){
         markOverdueTenures($pdo, $user_id);
@@ -186,18 +193,6 @@ if(isset($_GET['category'])){
                   WHERE (o.payment_status = 'pending' OR o.payment_status = 'partial' OR o.payment_status= 'overdue') AND o.user_id = :user_id
                   ORDER BY MIN(CASE WHEN ot.status != 'paid' THEN ot.due_date END) OVER (PARTITION BY o.invoice_number) ASC, o.invoice_number, ot.due_date ASC";
     }
-            // $query= "SELECT o.invoice_number, c.name AS customer_name, ot.due_date, ot.amount_due, ot.amount_paid, ot.status, o.order_id
-            //       FROM order_tenures ot
-            //       JOIN orders o ON ot.order_id = o.order_id
-            //       JOIN customers c ON o.cust_id = c.cust_id
-            //       JOIN (
-            //           SELECT order_id, MIN(due_date) AS min_unpaid_date
-            //           FROM order_tenures
-            //           WHERE status != 'paid'
-            //           GROUP BY order_id
-            //       ) unpaid ON o.order_id = unpaid.order_id
-            //       WHERE (o.payment_status = 'pending' OR o.payment_status = 'partial') AND o.user_id = :user_id
-            //       ORDER BY unpaid.min_unpaid_date ASC, o.invoice_number, ot.due_date ASC";
 
     try{
         $stmt = $pdo->prepare($query);
@@ -338,11 +333,18 @@ if(isset($_GET['order_id'])){
     try{
         $stmtInfo = $pdo->prepare(
             "SELECT o.invoice_number, o.order_date, o.delivery_date, o.status, o.payment_status, o.total_amount,
-                    c.name AS customer_name
+                    c.name AS customer_name,
+                    pc.name   AS purchasing_contact_name,  pc.phone   AS purchasing_contact_phone,
+                    payc.name AS payment_contact_name,    payc.phone  AS payment_contact_phone,
+                    rc.name   AS receiving_contact_name,  rc.phone    AS receiving_contact_phone
              FROM orders o
              JOIN customers c ON o.cust_id = c.cust_id
+             LEFT JOIN customer_contacts pc   ON o.purchasing_contact_id = pc.contact_id
+             LEFT JOIN customer_contacts payc ON o.payment_contact_id    = payc.contact_id
+             LEFT JOIN customer_contacts rc   ON o.receiving_contact_id  = rc.contact_id
              WHERE o.order_id = :order_id AND o.user_id = :user_id"
         );
+        //   LEFT JOIN means orders without contacts still load fine, those fields just come back as null.
         $stmtInfo->execute([':order_id' => $order_id, ':user_id' => $user_id]);
         $orderInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
 

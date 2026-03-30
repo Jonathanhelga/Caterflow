@@ -91,8 +91,8 @@ function saveOrder($pdo, $order_data, $items, $tenure_information, $cust_code){
 
         // Insert with a temporary unique invoice so NOT NULL + UNIQUE constraints are satisfied
         $order_data[':invoice_number'] = 'TEMP-' . uniqid('', true);
-        $sqlOrder = "INSERT INTO orders (user_id, cust_id, invoice_number, order_date, delivery_date, total_amount)
-                     VALUES (:user_id, :cust_id, :invoice_number, :order_date, :delivery_date, :total_amount)";
+        $sqlOrder = "INSERT INTO orders (user_id, cust_id, invoice_number, order_date, delivery_date, total_amount, purchasing_contact_id, payment_contact_id, receiving_contact_id)
+                     VALUES (:user_id, :cust_id, :invoice_number, :order_date, :delivery_date, :total_amount, :purchasing_contact_id, :payment_contact_id, :receiving_contact_id)";
         $stmtOrder = $pdo->prepare($sqlOrder);
         $stmtOrder->execute($order_data);
         $order_id = $pdo->lastInsertId();
@@ -129,12 +129,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
     // var_dump($_POST);
     // echo "</pre>";
     // exit;
-    $cust_id = trim($_POST['customers'] ?? '');
+    $cust_id = trim((int)$_POST['customers'] ?? '');
     $order_date = trim($_POST['order_date'] ?? '');
     $delivery_date = trim($_POST['delivery_date'] ?? '');
     $tenures = trim($_POST['tenures'] ?? '');
     $tenure_interval = trim($_POST['tenure_interval'] ?? '1');
     $tenure_period = trim($_POST['tenure_period'] ?? '');
+    $purchasing_contact_id = !empty($_POST['purchasing_contact_id']) ? (int)$_POST['purchasing_contact_id'] : null;
+    $payment_contact_id    = !empty($_POST['payment_contact_id'])    ? (int)$_POST['payment_contact_id']    : null;
+    $receiving_contact_id  = !empty($_POST['receiving_contact_id'])  ? (int)$_POST['receiving_contact_id']  : null;
 
     $submitted_products = $_POST['products'] ?? [];
     $submitted_quantities = $_POST['quantities'] ?? [];
@@ -159,12 +162,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
         }
         $order_calculations = calculateOrderTotals($submitted_products, $submitted_quantities, $products);
         $paramsOrders = [
-            ':user_id' => $_SESSION['id'],
-            ':cust_id' => $cust_id,
-            ':invoice_number' => '',
-            ':order_date' => $order_date,
-            ':delivery_date' => $delivery_date,
-            ':total_amount' => $order_calculations['total']
+            ':user_id'                => $_SESSION['id'],
+            ':cust_id'                => $cust_id,
+            ':invoice_number'         => '',
+            ':order_date'             => $order_date,
+            ':delivery_date'          => $delivery_date,
+            ':total_amount'           => $order_calculations['total'],
+            ':purchasing_contact_id'  => $purchasing_contact_id,
+            ':payment_contact_id'     => $payment_contact_id,
+            ':receiving_contact_id'   => $receiving_contact_id,
         ];
         $tenureArray = calculateTenures($tenures, $tenure_interval, $period_unit, $order_calculations['total'], $delivery_date);
         try{
