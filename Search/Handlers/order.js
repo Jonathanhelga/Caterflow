@@ -160,3 +160,7 @@ async function orderDetailRequest(order_id){
         console.error('Error fetching order details:', error);
     }
 }
+
+// async function orderModifyRequest(order_id){
+//     const url = `Search/search_logic.php?modify_order=${encodeURIComponent(order_id)}`;
+// }

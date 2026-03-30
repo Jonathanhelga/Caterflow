@@ -32,7 +32,7 @@ Customer_Information
     CREATE TABLE customers (
         cust_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        cust_code VARCHAR(10) NOT NULL UNIQUE,
+        cust_code VARCHAR(10) NOT NULL,
         type ENUM('individual', 'hotel', 'company', 'reseller') NOT NULL,
 
         name VARCHAR(100) NOT NULL,
@@ -48,9 +48,12 @@ Customer_Information
 
         INDEX idx_cust_code (cust_code),
         INDEX idx_name (name),
-        
+        CONSTRAINT 
         FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    ALTER TABLE customers
+    ADD CONSTRAINT unique_user_cust_code UNIQUE (user_id, cust_code);
 
 Product_Information
     CREATE TABLE products (
