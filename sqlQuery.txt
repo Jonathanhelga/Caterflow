@@ -32,7 +32,7 @@ Customer_Information
     CREATE TABLE customers (
         cust_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        cust_code VARCHAR(10) NOT NULL,
+        cust_code VARCHAR(10) NOT NULL UNIQUE,
         type ENUM('individual', 'hotel', 'company', 'reseller') NOT NULL,
 
         name VARCHAR(100) NOT NULL,
@@ -51,7 +51,9 @@ Customer_Information
         CONSTRAINT 
         FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+    SHOW INDEX FROM your_table WHERE Column_name = 'cust_code';
+    ALTER TABLE customers
+    DROP INDEX cust_code;
     ALTER TABLE customers
     ADD CONSTRAINT unique_user_cust_code UNIQUE (user_id, cust_code);
 
@@ -79,7 +81,15 @@ Product_Information
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 (
-    ALTER TABLE products 
+        ALTER TABLE products
+        DROP INDEX name;
+        ALTER TABLE products
+        ADD CONSTRAINT unique_user_product_code UNIQUE (user_id, product_code);
+        ALTER TABLE products
+        DROP INDEX name;
+        ALTER TABLE products
+        ADD CONSTRAINT unique_user_product_name UNIQUE (user_id, name);
+        ALTER TABLE products 
         ADD COLUMN category_id INT UNSIGNED AFTER product_code,
         ADD CONSTRAINT fk_category 
         FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL;
@@ -113,6 +123,11 @@ Vendor_Information
         FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT ON UPDATE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    ALTER TABLE vendors
+    DROP INDEX vendor_code;
+    ALTER TABLE vendors
+    ADD CONSTRAINT unique_user_vendor_code UNIQUE (user_id, vendor_code);
 
 Orders_Information
     CREATE TABLE orders (
@@ -152,7 +167,6 @@ Orders_Information
       ADD COLUMN receiving_contact_id BIGINT UNSIGNED AFTER payment_contact_id,                                                         
       ADD CONSTRAINT fk_receiving_contact
           FOREIGN KEY (receiving_contact_id) REFERENCES customer_contacts(contact_id) ON DELETE SET NULL;   
-
 
 Ordered_Product_Information
     CREATE TABLE order_items (
