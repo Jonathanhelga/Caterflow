@@ -8,13 +8,17 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 
 require_once __DIR__ . '/../Database/db_connect.php';
 
-$errors = ['username' => "", 'password' => "", 'confirm_password' => "", 'weird' => ""];
+$errors = ['username' => "", 'email' => "", 'password' => "", 'confirm_password' => "", 'weird' => ""];
 $username = "";
+$email = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
-    $input_user = trim($_POST["username"]);
-    $input_pass = trim($_POST["password"]);
-    $input_conf = trim($_POST["confirm_password"]);
+    $input_user  = trim($_POST["username"]);
+    $input_email = trim($_POST["email"] ?? '');
+    $input_pass  = trim($_POST["password"]);
+    $input_conf  = trim($_POST["confirm_password"]);
+    $username = $input_user;
+    $email    = $input_email;
 
     // 1. Username Validation
     if (empty($input_user)) {
@@ -29,7 +33,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
         }
     }
 
-    // 2. Password Validation
+    // 2. Email Validation
+    if (empty($input_email)) {
+        $errors['email'] = "Email field can't be empty.";
+    } elseif (!filter_var($input_email, FILTER_VALIDATE_EMAIL)) {
+        $errors['email'] = "Please enter a valid email address.";
+    } else {
+        $stmt = $pdo->prepare("SELECT user_id FROM User_List WHERE email = :email");
+        $stmt->execute(['email' => $input_email]);
+        if ($stmt->fetch()) {
+            $errors['email'] = "An account with this email already exists.";
+        }
+    }
+
+    // 3. Password Validation
     if (empty($input_pass)) {
         $errors['password'] = "Please enter a password.";
     } elseif (strlen($input_pass) < 6) {
@@ -40,18 +57,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
         $errors['confirm_password'] = "Passwords do not match.";
     }
 
-    // 3. Final Processing
+    // 4. Final Processing
     if (empty(array_filter($errors))) {
         try {
-            // --- PDO MIGRATION: Insert User ---
-            $sql = "INSERT INTO User_List (username, password_hash) VALUES (:username, :password)";
+            $sql = "INSERT INTO User_List (username, email, password_hash) VALUES (:username, :email, :password)";
             $prepare = $pdo->prepare($sql);
-            
+
             $hashed_password = password_hash($input_pass, PASSWORD_BCRYPT);
-            
-            // Execute with an associative array - much cleaner than bind_param!
+
             $success = $prepare->execute([
                 'username' => $input_user,
+                'email'    => $input_email,
                 'password' => $hashed_password
             ]);
 

@@ -22,12 +22,22 @@ require_once __DIR__ . '/Register/register_logic.php';
                 <form method="post" action="index.php" class="registration-form">
                     
                     <div class="form-group">
-                        <label for="username">Username / Email</label>
-                        <input type="text" id="username" name="username" 
-                            placeholder="e.g.zz catering_pro" 
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username"
+                            placeholder="e.g. catering_pro"
                             value="<?php echo htmlspecialchars($username); ?>">
                         <?php if (!empty($errors['username'])): ?>
                             <span class="error-text"><?php echo $errors['username']; ?></span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="text" id="email" name="email"
+                            placeholder="you@example.com"
+                            value="<?php echo htmlspecialchars($email); ?>">
+                        <?php if (!empty($errors['email'])): ?>
+                            <span class="error-text"><?php echo $errors['email']; ?></span>
                         <?php endif; ?>
                     </div>
 
@@ -65,7 +75,7 @@ require_once __DIR__ . '/Register/register_logic.php';
 
                 <footer class="register-footer">
                     <p>Already Have an Account? <a href="login.php">Click Here</a></p>
-                    <p>Forgot Your Password? <a href="#">Click Here</a></p>
+                    <p>Forgot Your Password? <a href="forgot_password.php">Click Here</a></p>
                 </footer>
             </div>
         </section>

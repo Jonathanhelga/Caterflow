@@ -210,4 +210,30 @@ Order_Tenure_Information
         FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
- ALTER TABLE order_tenures MODIFY COLUMN status ENUM('pending', 'paid', 'overdue', 'partial') DEFAULT 'pending';  
+ ALTER TABLE order_tenures MODIFY COLUMN status ENUM('pending', 'paid', 'overdue', 'partial') DEFAULT 'pending';
+
+Forgot_Password_Migration
+    -- Step 1: add nullable email column to existing users
+    ALTER TABLE User_List
+        ADD COLUMN email VARCHAR(255) NULL UNIQUE AFTER username;
+
+    -- Step 2: backfill email for any existing accounts (run once per existing user)
+    -- UPDATE User_List SET email = 'mom_real_email@example.com' WHERE username = 'Shardjo888';
+
+    -- Step 3: once every existing row has an email, lock it down as required
+    ALTER TABLE User_List MODIFY email VARCHAR(255) NOT NULL;
+
+    -- Step 4: password reset tokens
+    CREATE TABLE password_resets (
+        reset_id    BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id     INT NOT NULL,
+        token_hash  CHAR(64) NOT NULL,
+        expires_at  DATETIME NOT NULL,
+        used_at     DATETIME NULL,
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        INDEX idx_token_hash (token_hash),
+        INDEX idx_user_id (user_id),
+
+        FOREIGN KEY (user_id) REFERENCES User_List(user_id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;  

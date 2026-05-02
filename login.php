@@ -69,7 +69,7 @@ require_once __DIR__ . '/Login/login_logic.php';
                 <footer class="login-footer">
                     <p>Not yet have an Account? <a href="./index.php">Click Here</a></p>
                     <!-- on xampp href="./index.php" and on AWS EC2 ../index.php or else it will throw an error -->
-                    <p>Forgot Your Password? <a href="#">Click Here</a></p>
+                    <p>Forgot Your Password? <a href="forgot_password.php">Click Here</a></p>
                 </footer>
             </div>
         </section>

@@ -31,8 +31,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])){
 
     if(empty($username_err) && empty($password_err)){
         try {
-            $stmt = $pdo->prepare("SELECT user_id, username, password_hash FROM User_List WHERE username = :username");
-            $stmt->execute(['username' => $username]);
+            $stmt = $pdo->prepare("SELECT user_id, username, password_hash FROM User_List WHERE username = :identifier OR email = :identifier");
+            $stmt->execute(['identifier' => $username]);
 
             if($user = $stmt->fetch()){
                 if(password_verify($password, $user['password_hash'])){
