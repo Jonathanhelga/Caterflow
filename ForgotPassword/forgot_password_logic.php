@@ -17,9 +17,8 @@ $success = false;
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $email = trim($_POST['email'] ?? '');
 
-    if (empty($email)) {
-        $email_err = "Please enter your email.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (empty($email)) { $email_err = "Please enter your email."; } 
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $email_err = "Please enter a valid email address.";
     }
 
@@ -35,10 +34,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
                 $expires = (new DateTime('+1 hour'))->format('Y-m-d H:i:s');
 
                 $pdo->prepare("UPDATE password_resets SET used_at = NOW() WHERE user_id = :uid AND used_at IS NULL")
-                    ->execute(['uid' => $user['user_id']]);
+                    ->execute(['uid' => $user['user_id']]); //this part will prevent unused link in case the user resubmit her/his email and doesn't use it the previously submitted 
 
                 $pdo->prepare("INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (:uid, :h, :e)")
-                    ->execute(['uid' => $user['user_id'], 'h' => $tokenHash, 'e' => $expires]);
+                    ->execute(['uid' => $user['user_id'], 'h' => $tokenHash, 'e' => $expires]);//we insert a new row for later use as a comparison of hash value to prevent missmatching account possibility
 
                 $appUrl = rtrim($_ENV['APP_URL'] ?? '', '/');
                 $resetLink = $appUrl . '/password_reset.php?token=' . $token;
@@ -53,3 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
         }
     }
 }
+
+
+//   DELETE FROM password_resets WHERE used_at IS NOT NULL AND used_at < NOW() - INTERVAL 30 DAY;                                                                                                                                                                        
+//   DELETE FROM password_resets WHERE expires_at < NOW() - INTERVAL 30 DAY;

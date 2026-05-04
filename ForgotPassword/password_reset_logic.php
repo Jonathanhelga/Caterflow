@@ -34,15 +34,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit']) && $valid_to
     $pass = trim($_POST['password'] ?? '');
     $conf = trim($_POST['confirm_password'] ?? '');
 
-    if (empty($pass)) {
-        $password_err = "Please enter a new password.";
-    } elseif (strlen($pass) < 6) {
-        $password_err = "Password must have at least 6 characters.";
-    }
+    if (empty($pass)) { $password_err = "Please enter a new password."; } 
+    elseif (strlen($pass) < 6) { $password_err = "Password must have at least 6 characters."; }
 
-    if ($pass !== $conf) {
-        $confirm_err = "Passwords do not match.";
-    }
+    if ($pass !== $conf) { $confirm_err = "Passwords do not match."; }
 
     if (empty($password_err) && empty($confirm_err)) {
         try {
