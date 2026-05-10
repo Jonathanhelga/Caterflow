@@ -1,0 +1,27 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into EC2 and redeploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/html/Caterflow
+            git stash || true
+            git pull origin main
+            composer install --no-dev --optimize-autoloader
+            sudo chown -R ubuntu:www-data .
+            sudo chmod -R 755 .
+            sudo systemctl reload apache2
+            echo "Deploy finished at $(date)"
+

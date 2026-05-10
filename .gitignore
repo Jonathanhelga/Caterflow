@@ -4,4 +4,6 @@ vendor/
 node_modules/
 *.log
 *.txt
+*.pem
+*.sql
 resume_project_notes_caterflow.md
