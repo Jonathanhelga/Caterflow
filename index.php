@@ -76,7 +76,6 @@ require_once __DIR__ . '/Register/register_logic.php';
                 <footer class="register-footer">
                     <p>Already Have an Account? <a href="login.php">Click Here</a></p>
                     <p>Forgot Your Password? <a href="forgot_password.php">Click Here</a></p>
-                    <p style="font-size: 0.75rem; opacity: 0.6; margin-top: 1rem;">CI/CD test — first auto-deploy 🚀</p>
                 </footer>
             </div>
         </section>
